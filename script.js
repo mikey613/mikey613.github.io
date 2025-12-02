@@ -4,17 +4,17 @@ const config = {
     brideName: "叶霞", 
     engagementDate: "2026-01-25", // 订婚日期（公历）
     engagementTime: "12:00",       // 订婚时间
-    location: "XX市XX区XX酒店 三楼宴会厅", // 宴会地点
+    location: "宴设暨阳宴仙湖三楼大厅", // 宴会地点
     // 照片配置（可添加/删除/替换）
     photos: [
-        { url: "1.png", caption: "初遇的心动" },
-        { url: "2.png", caption: "第一次约会" },
-        { url: "3.png", caption: "旅行的美好" },
-        { url: "4.png", caption: "甜蜜日常" },
-        { url: "5.png", caption: "爱的告白" },
-        { url: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", caption: "浪漫时光" },
-        { url: "https://images.unsplash.com/photo-1532712938310-34cb3982ef74?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", caption: "幸福瞬间" },
-        { url: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", caption: "携手同行" }
+        { url: "1.jpg", caption: "初遇的心动" },
+        { url: "2.jpg", caption: "第一次约会" },
+        { url: "3.jpg", caption: "旅行的美好" },
+        { url: "5.jpg", caption: "甜蜜日常" },
+        { url: "4.jpg", caption: "爱的告白" },
+        { url: "6.jpg", caption: "浪漫时光" },
+        { url: "7.jpg", caption: "幸福瞬间" },
+        { url: "8.jpg", caption: "携手同行" }
     ]
 };
 
@@ -179,6 +179,17 @@ function getReplies() {
     return JSON.parse(localStorage.getItem('engagementReplies')) || [];
 }
 
+// 视差滚动效果
+window.addEventListener('scroll', function() {
+    const scrollY = window.scrollY;
+    const decorations = document.querySelectorAll('.bg-decoration');
+    
+    decorations.forEach((decor, index) => {
+        const speed = 0.05 * (index + 1);
+        decor.style.transform = `translateY(${scrollY * speed}px) rotate(${scrollY * 0.02}deg)`;
+    });
+});
+
 // 存储祝福
 function saveWish(wishData) {
     let wishes = JSON.parse(localStorage.getItem('engagementWishes')) || [];
@@ -220,11 +231,11 @@ function initPageContent() {
     const lunar = LunarCalendar.getLunarDate(engagementDate);
     
     // 更新页面信息
-    document.getElementById('engagement-date').textContent = 
-        `${engagementDate.getFullYear()}年${String(engagementDate.getMonth() + 1).padStart(2, '0')}月${String(engagementDate.getDate()).padStart(2, '0')}日 中午${config.engagementTime}`;
+    // document.getElementById('engagement-date').textContent = 
+    //     `${engagementDate.getFullYear()}年${String(engagementDate.getMonth() + 1).padStart(2, '0')}月${String(engagementDate.getDate()).padStart(2, '0')}日 中午${config.engagementTime}`;
     
-    document.getElementById('lunar-date').textContent = 
-        `农历${lunar.ganZhi}${lunar.shu}年${lunar.month}月${lunar.day} ${weekDay}`;
+    // document.getElementById('lunar-date').textContent = 
+    //     `农历${lunar.ganZhi}${lunar.shu}年${lunar.month}月${lunar.day} ${weekDay}`;
     
     document.getElementById('location').textContent = config.location;
     document.getElementById('traffic-location').innerHTML = 
@@ -588,3 +599,14 @@ function formatTime(timestamp) {
     const minute = String(date.getMinutes()).padStart(2, '0');
     return `${year}-${month}-${day} ${hour}:${minute}`;
 }
+
+// 页面加载完成后隐藏加载动画
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        const loader = document.getElementById('loader');
+        loader.style.opacity = '0';
+        setTimeout(function() {
+            loader.style.display = 'none';
+        }, 500);
+    }, 1000);
+});
