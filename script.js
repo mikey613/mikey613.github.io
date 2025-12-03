@@ -166,18 +166,7 @@ class LunarCalendar {
     }
 }
 
-// ==================== 本地存储工具函数 ====================
-// 存储宾客回执
-function saveReply(replyData) {
-    let replies = JSON.parse(localStorage.getItem('engagementReplies')) || [];
-    replies.unshift(replyData); // 新增回执放在最前面
-    localStorage.setItem('engagementReplies', JSON.stringify(replies));
-}
 
-// 获取所有宾客回执
-function getReplies() {
-    return JSON.parse(localStorage.getItem('engagementReplies')) || [];
-}
 
 // 视差滚动效果
 window.addEventListener('scroll', function() {
@@ -190,27 +179,138 @@ window.addEventListener('scroll', function() {
     });
 });
 
-// 存储祝福
-function saveWish(wishData) {
-    let wishes = JSON.parse(localStorage.getItem('engagementWishes')) || [];
-    wishes.unshift(wishData); // 新增祝福放在最前面
-    localStorage.setItem('engagementWishes', JSON.stringify(wishes));
+
+
+// ==================== 倒计时功能 ====================
+function initCountdown() {
+    // 设置目标日期（订婚日期）
+    const targetDate = new Date(config.engagementDate);
+    
+    // 倒计时元素
+    const daysElement = document.getElementById('days');
+    const hoursElement = document.getElementById('hours');
+    const minutesElement = document.getElementById('minutes');
+    const secondsElement = document.getElementById('seconds');
+    
+    // 检查元素是否存在
+    if (!daysElement || !hoursElement || !minutesElement || !secondsElement) {
+        console.log('倒计时元素未找到');
+        return;
+    }
+    
+    function updateCountdown() {
+        const now = new Date();
+        const difference = targetDate - now;
+        
+        // 计算剩余时间
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+        
+        // 更新显示
+        daysElement.textContent = String(days).padStart(2, '0');
+        hoursElement.textContent = String(hours).padStart(2, '0');
+        minutesElement.textContent = String(minutes).padStart(2, '0');
+        secondsElement.textContent = String(seconds).padStart(2, '0');
+        
+        // 添加动画效果
+        if (seconds % 2 === 0) {
+            secondsElement.style.transform = 'scale(1.1)';
+        } else {
+            secondsElement.style.transform = 'scale(1)';
+        }
+    }
+    
+    // 初始化倒计时
+    updateCountdown();
+    
+    // 每秒更新一次
+    setInterval(updateCountdown, 1000);
 }
 
-// 获取所有祝福
-function getWishes() {
-    return JSON.parse(localStorage.getItem('engagementWishes')) || [];
+
+
+// ==================== 留言板功能 ====================
+function initMessageBoard() {
+    const submitBtn = document.getElementById('submit-message');
+    const guestName = document.getElementById('guest-name');
+    const guestMessage = document.getElementById('guest-message');
+    const messagesContainer = document.getElementById('messages-container');
+    
+    // 检查元素是否存在
+    if (!submitBtn || !guestName || !guestMessage || !messagesContainer) {
+        console.log('留言板元素未找到');
+        return;
+    }
+    
+    // 提交留言事件
+    submitBtn.addEventListener('click', () => {
+        const name = guestName.value.trim();
+        const message = guestMessage.value.trim();
+        
+        if (!name || !message) {
+            alert('请填写您的姓名和祝福！');
+            return;
+        }
+        
+        // 创建新留言元素
+        const messageItem = document.createElement('div');
+        messageItem.className = 'message-item';
+        
+        // 获取当前时间
+        const now = new Date();
+        const timeStr = now.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        // 构建留言内容
+        messageItem.innerHTML = `
+            <div class="message-header">
+                <span class="message-name">${name}</span>
+                <span class="message-time">${timeStr}</span>
+            </div>
+            <div class="message-content">${message}</div>
+        `;
+        
+        // 添加到留言容器（添加到最前面）
+        messagesContainer.insertBefore(messageItem, messagesContainer.firstChild);
+        
+        // 添加动画效果
+        messageItem.style.opacity = '0';
+        setTimeout(() => {
+            messageItem.style.opacity = '1';
+            messageItem.style.transform = 'translateY(0)';
+        }, 10);
+        
+        // 清空输入框
+        guestName.value = '';
+        guestMessage.value = '';
+        
+        // 显示成功提示
+        alert('感谢您的祝福！');
+    });
+    
+    // 回车键提交
+    guestMessage.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+            submitBtn.click();
+        }
+    });
 }
 
 // ==================== 页面初始化 ====================
 window.addEventListener('load', () => {
     initPageContent();
+    initCountdown(); // 初始化倒计时
+    initMessageBoard(); // 初始化留言板
     initCarousel();
-    initWishWall(); // 初始化祝福墙（读取本地存储）
-    initReplyList(); // 初始化回执列表（读取本地存储）
     initScrollAnimation();
     initParticleBackground();
-    initReplyForm(); // 初始化回执提交
     initShareFunction();
     initSaveInvitation();
     initClickEffect();
@@ -237,13 +337,24 @@ function initPageContent() {
     // document.getElementById('lunar-date').textContent = 
     //     `农历${lunar.ganZhi}${lunar.shu}年${lunar.month}月${lunar.day} ${weekDay}`;
     
-    document.getElementById('location').textContent = config.location;
-    document.getElementById('traffic-location').innerHTML = 
-        `<p><i class="fas fa-map-marker-alt" style="color: var(--primary-color); margin-right: 8px;"></i>
-        宴会地点：<strong>${config.location}</strong></p>`;
+    // 检查元素是否存在后再更新内容
+    const locationElement = document.getElementById('location');
+    if (locationElement) {
+        locationElement.textContent = config.location;
+    }
+    
+    const trafficLocationElement = document.getElementById('traffic-location');
+    if (trafficLocationElement) {
+        trafficLocationElement.innerHTML = 
+            `<p><i class="fas fa-map-marker-alt" style="color: var(--primary-color); margin-right: 8px;"></i>
+            宴会地点：<strong>${config.location}</strong></p>`;
+    }
     
     // 设置分享链接
-    document.getElementById('page-url').value = window.location.href;
+    const pageUrlElement = document.getElementById('page-url');
+    if (pageUrlElement) {
+        pageUrlElement.value = window.location.href;
+    }
 }
 
 // ==================== 动态翻页动画 ====================
@@ -265,27 +376,47 @@ function initScrollAnimation() {
     });
 }
 
-// ==================== 粒子背景效果 ====================
+// ==================== 粒子背景增强版 ====================
 function initParticleBackground() {
     const container = document.getElementById('particle-container');
-    const particleCount = 50;
+    const particleCount = 80;
+    
+    // 更丰富的粒子类型
+    const particleTypes = ['❤️', '💖', '💘', '🌸', '💍', '✨', '🌟', '💫', '💐', '🌹', '💮', '🌺', '•'];
     
     for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
         
-        // 随机粒子类型（爱心、圆点、小花）
-        const particleTypes = ['❤️', '💖', '💘', '🌸', '💍', '•'];
+        // 随机粒子类型
         const type = particleTypes[Math.floor(Math.random() * particleTypes.length)];
         
         particle.innerHTML = type;
         particle.style.position = 'absolute';
         particle.style.left = `${Math.random() * 100}%`;
         particle.style.top = `${Math.random() * 100}%`;
-        particle.style.fontSize = `${5 + Math.random() * 15}px`;
-        particle.style.color = ['var(--primary-color)', 'var(--secondary-color)', 'var(--accent-color)'][Math.floor(Math.random() * 3)];
-        particle.style.opacity = `${0.3 + Math.random() * 0.7}`;
-        particle.style.animation = `float ${5 + Math.random() * 10}s ease-in-out infinite ${Math.random() * 5}s`;
+        particle.style.fontSize = `${3 + Math.random() * 20}px`;
+        
+        // 随机颜色，更丰富的配色
+        const colors = ['var(--primary-color)', 'var(--secondary-color)', 'var(--accent-color)', '#ffb6c1', '#dda0dd', '#ff69b4', '#ffc0cb'];
+        particle.style.color = colors[Math.floor(Math.random() * colors.length)];
+        
+        particle.style.opacity = `${0.2 + Math.random() * 0.8}`;
+        
+        // 随机动画效果
+        const animationType = Math.random();
+        if (animationType < 0.4) {
+            particle.style.animation = `float ${5 + Math.random() * 10}s ease-in-out infinite ${Math.random() * 5}s`;
+        } else if (animationType < 0.8) {
+            particle.style.animation = `floatSway ${6 + Math.random() * 12}s ease-in-out infinite ${Math.random() * 5}s`;
+        } else {
+            particle.style.animation = `floatRotate ${7 + Math.random() * 14}s ease-in-out infinite ${Math.random() * 5}s`;
+        }
+        
         particle.style.pointerEvents = 'none';
+        particle.style.zIndex = -1;
+        
+        // 随机旋转角度
+        particle.style.transform = `rotate(${Math.random() * 360}deg)`;
         
         container.appendChild(particle);
     }
@@ -293,10 +424,19 @@ function initParticleBackground() {
 
 // ==================== 照片轮播增强版 ====================
 let currentSlide = 0;
-const carousel = document.getElementById('photo-carousel');
-const dotsContainer = document.getElementById('carousel-dots');
+let carousel, dotsContainer;
 
 function initCarousel() {
+    // 获取轮播元素
+    carousel = document.getElementById('photo-carousel');
+    dotsContainer = document.getElementById('carousel-dots');
+    
+    // 检查元素是否存在
+    if (!carousel || !dotsContainer) {
+        console.log('轮播元素未找到');
+        return;
+    }
+    
     carousel.innerHTML = '';
     dotsContainer.innerHTML = '';
     
@@ -357,6 +497,7 @@ function prevSlide() {
 function updateCarousel() {
     // 计算轮播平移距离（单个轮播项宽度 * 当前索引，向左平移）
     const slideWidth = carousel.offsetWidth;
+    // 确保只修改 translateX 属性，不影响 translateY
     carousel.style.transform = `translateX(-${currentSlide * slideWidth}px)`;
     carousel.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
     
@@ -367,121 +508,9 @@ function updateCarousel() {
     });
 }
 
-// ==================== 祝福墙功能 ====================
-function initWishWall() {
-    const wishWall = document.getElementById('wish-wall');
-    const wishes = getWishes();
-    
-    if (wishes.length === 0) {
-        wishWall.innerHTML = '<div style="text-align: center; color: #999; padding: 30px 0;">暂无祝福，快来写下你的美好祝愿吧～</div>';
-        return;
-    }
-    
-    // 渲染祝福列表
-    wishWall.innerHTML = wishes.map(wish => `
-        <div class="wish-item">
-            <div class="wish-author">${wish.author || '匿名祝福'}</div>
-            <div class="wish-text">${wish.text}</div>
-            <div class="wish-time">${formatTime(wish.time)}</div>
-        </div>
-    `).join('');
-}
 
-// 提交祝福
-function submitWish() {
-    const author = document.getElementById('wish-author').value.trim();
-    const text = document.getElementById('wish-text').value.trim();
-    
-    if (!text) {
-        alert('祝福语不能为空哦～');
-        return;
-    }
-    
-    // 构造祝福数据
-    const wishData = {
-        author: author,
-        text: text,
-        time: new Date().getTime() // 存储时间戳
-    };
-    
-    // 保存到本地存储
-    saveWish(wishData);
-    
-    // 刷新祝福墙
-    initWishWall();
-    
-    // 清空输入框并关闭弹窗
-    document.getElementById('wish-author').value = '';
-    document.getElementById('wish-text').value = '';
-    document.getElementById('wish-modal').style.display = 'none';
-    
-    alert('祝福发送成功！感谢您的美好祝愿～');
-}
 
-// ==================== 宾客回执功能 ====================
-function initReplyList() {
-    const replyContent = document.getElementById('reply-content');
-    const replyCount = document.getElementById('reply-count');
-    const replies = getReplies();
-    
-    replyCount.textContent = replies.length;
-    
-    if (replies.length === 0) {
-        replyContent.innerHTML = '<div style="text-align: center; color: #999; padding: 20px 0;">暂无宾客提交回执</div>';
-        return;
-    }
-    
-    // 渲染回执列表
-    replyContent.innerHTML = replies.map(reply => `
-        <div class="reply-item">
-            <div class="reply-name">${reply.name}</div>
-            <div>
-                <span class="reply-status ${reply.attendance}">${reply.attendance === 'attend' ? '准时出席' : '无法出席'}</span>
-                <span class="reply-count">出席人数：${reply.count}人</span>
-            </div>
-            ${reply.message ? `<div class="reply-message">留言：${reply.message}</div>` : ''}
-            <div class="reply-time">提交时间：${formatTime(reply.time)}</div>
-        </div>
-    `).join('');
-}
 
-// 初始化回执表单提交
-function initReplyForm() {
-    const form = document.getElementById('reply-form');
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        const name = document.getElementById('guest-name').value.trim();
-        const attendance = document.getElementById('attendance').value;
-        const count = document.getElementById('guest-count').value;
-        const message = document.getElementById('guest-message').value.trim();
-        
-        if (!name || !attendance || !count) {
-            alert('请填写完整的回执信息～');
-            return;
-        }
-        
-        // 构造回执数据
-        const replyData = {
-            name: name,
-            attendance: attendance,
-            count: count,
-            message: message,
-            time: new Date().getTime() // 存储时间戳
-        };
-        
-        // 保存到本地存储
-        saveReply(replyData);
-        
-        // 刷新回执列表
-        initReplyList();
-        
-        // 重置表单
-        form.reset();
-        
-        alert('回执提交成功！感谢您的配合～');
-    });
-}
 
 // ==================== 分享功能 ====================
 function initShareFunction() {
@@ -540,7 +569,7 @@ function initSaveInvitation() {
 
 // ==================== 点击效果 ====================
 function initClickEffect() {
-    const buttons = document.querySelectorAll('.wish-btn, .submit-reply, .carousel-nav, .share-option');
+    const buttons = document.querySelectorAll('.wish-btn, .carousel-nav, .share-option');
     buttons.forEach(btn => {
         btn.addEventListener('click', function() {
             this.style.transform = 'scale(0.95)';
@@ -553,22 +582,6 @@ function initClickEffect() {
 
 // ==================== 弹窗事件 ====================
 function initModalEvents() {
-    // 祝福弹窗
-    const openWishModal = document.getElementById('open-wish-modal');
-    const closeWishModal = document.getElementById('close-wish-modal');
-    const wishModal = document.getElementById('wish-modal');
-    const submitWishBtn = document.getElementById('submit-wish');
-    
-    openWishModal.addEventListener('click', () => {
-        wishModal.style.display = 'flex';
-    });
-    
-    closeWishModal.addEventListener('click', () => {
-        wishModal.style.display = 'none';
-    });
-    
-    submitWishBtn.addEventListener('click', submitWish);
-    
     // 分享弹窗
     const openShareModal = document.getElementById('open-share-modal');
     const closeShareModal = document.getElementById('close-share-modal');
@@ -584,7 +597,6 @@ function initModalEvents() {
     
     // 点击弹窗外部关闭
     window.addEventListener('click', (e) => {
-        if (e.target === wishModal) wishModal.style.display = 'none';
         if (e.target === shareModal) shareModal.style.display = 'none';
     });
 }
