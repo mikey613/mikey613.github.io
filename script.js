@@ -1892,19 +1892,33 @@ window.addEventListener('load', () => {
     })();
 })();
 
-/* ========== 日常打卡 ========== */
+/* ========== 日常打卡（远程同步） ========== */
 (function initCheckin() {
     const btn = document.getElementById('btnCheckin');
     const streakEl = document.getElementById('checkinStreak');
     const grid = document.getElementById('checkinGrid');
     const KEY = 'love-checkin';
+    let _sha = null;
 
     function getData() {
         return JSON.parse(localStorage.getItem(KEY) || '{"dates":[]}');
     }
 
-    function save(data) {
+    function saveLocal(data) {
         localStorage.setItem(KEY, JSON.stringify(data));
+    }
+
+    async function pushToGitHub(data) {
+        const ok = await GitHubSync.set('data/checkin.json', data, _sha);
+        if (ok) {
+            const fresh = await GitHubSync.get('data/checkin.json');
+            if (fresh) _sha = fresh.sha;
+        }
+    }
+
+    function save(data) {
+        saveLocal(data);
+        pushToGitHub(data);
     }
 
     function getStreak() {
@@ -1933,7 +1947,6 @@ window.addEventListener('load', () => {
         const data = getData();
         const today = new Date();
         grid.innerHTML = '';
-        // 显示最近 28 天
         for (let i = 27; i >= 0; i--) {
             const d = new Date(today);
             d.setDate(d.getDate() - i);
@@ -1965,16 +1978,23 @@ window.addEventListener('load', () => {
         renderGrid();
     });
 
-    // 检查今天是否已打卡
-    const today = new Date();
-    const ds = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-    const data = getData();
-    if (data.dates.includes(ds)) {
-        btn.textContent = '已打卡 ✓';
-        btn.disabled = true;
-    }
-    streakEl.textContent = '连续打卡: ' + getStreak() + ' 天';
-    renderGrid();
+    // 初始化：从 GitHub 拉取
+    (async () => {
+        const remote = await GitHubSync.get('data/checkin.json');
+        if (remote) {
+            _sha = remote.sha;
+            saveLocal(remote.content);
+        }
+        const today = new Date();
+        const ds = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+        const data = getData();
+        if (data.dates.includes(ds)) {
+            btn.textContent = '已打卡 ✓';
+            btn.disabled = true;
+        }
+        streakEl.textContent = '连续打卡: ' + getStreak() + ' 天';
+        renderGrid();
+    })();
 })();
 
 /* ========== 备忘录 ========== */
@@ -1996,7 +2016,7 @@ window.addEventListener('load', () => {
     });
 })();
 
-/* ========== 喝水提醒 ========== */
+/* ========== 喝水提醒（远程同步） ========== */
 (function initWater() {
     const cupsEl = document.getElementById('waterCups');
     const fillEl = document.getElementById('waterFill');
@@ -2004,6 +2024,7 @@ window.addEventListener('load', () => {
     const resetBtn = document.getElementById('btnWaterReset');
     const timerEl = document.getElementById('waterTimer');
     const KEY = 'love-water';
+    let _sha = null;
 
     function getData() {
         const d = JSON.parse(localStorage.getItem(KEY) || '{"cups":0,"date":""}');
@@ -2015,8 +2036,21 @@ window.addEventListener('load', () => {
         return d;
     }
 
-    function save(data) {
+    function saveLocal(data) {
         localStorage.setItem(KEY, JSON.stringify(data));
+    }
+
+    async function pushToGitHub(data) {
+        const ok = await GitHubSync.set('data/water.json', data, _sha);
+        if (ok) {
+            const fresh = await GitHubSync.get('data/water.json');
+            if (fresh) _sha = fresh.sha;
+        }
+    }
+
+    function save(data) {
+        saveLocal(data);
+        pushToGitHub(data);
     }
 
     function render() {
@@ -2052,7 +2086,15 @@ window.addEventListener('load', () => {
         }
     }, 30 * 60 * 1000);
 
-    render();
+    // 初始化：从 GitHub 拉取
+    (async () => {
+        const remote = await GitHubSync.get('data/water.json');
+        if (remote) {
+            _sha = remote.sha;
+            saveLocal(remote.content);
+        }
+        render();
+    })();
 })();
 
 /* ========== 心情记录（远程同步） ========== */
