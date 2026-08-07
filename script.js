@@ -4,7 +4,7 @@ const isLowEnd = isMobile || navigator.hardwareConcurrency <= 4;
 
 /* ========== GitHub 配置 ========== */
 const GITHUB_REPO = 'mikey613/mikey613.github.io';
-const GITHUB_TOKEN = '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';
+const GITHUB_TOKEN = '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';
 
 /* ========== GitHub 远程同步模块 ========== */
 const GitHubSync = (function() {
