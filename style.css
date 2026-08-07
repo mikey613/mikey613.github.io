@@ -1369,7 +1369,7 @@ body.day-mode .counter-num {
 /* ========== 天气小组件 ========== */
 .weather-widget {
     position: fixed;
-    bottom: 150px;
+    bottom: 130px;
     right: 30px;
     z-index: 999;
     background: var(--bg-card);
@@ -1496,7 +1496,7 @@ body.day-mode .counter-num {
     }
 
     .weather-widget {
-        bottom: 140px;
+        bottom: 120px;
         right: 15px;
         padding: 8px 12px;
     }
