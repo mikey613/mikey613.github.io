@@ -1433,3 +1433,239 @@ window.addEventListener('load', () => {
 
     document.body.classList.add('season-' + season);
 })();
+
+/* ========== 帮助引导 ========== */
+(function initHelp() {
+    const toggle = document.getElementById('helpToggle');
+    const panel = document.getElementById('helpPanel');
+    const closeBtn = document.getElementById('helpClose');
+
+    toggle.addEventListener('click', () => panel.classList.add('show'));
+    closeBtn.addEventListener('click', () => panel.classList.remove('show'));
+    // 点击外部关闭
+    panel.addEventListener('click', (e) => {
+        if (e.target === panel) panel.classList.remove('show');
+    });
+})();
+
+/* ========== 情话生成器 ========== */
+(function initQuoteMachine() {
+    const quotes = [
+        '遇见你之前，我没想过结婚；遇见你之后，我没想过别人。',
+        '我想和你一起慢慢变老，直到我们变成两个可爱的小老头和小老太太。',
+        '你是我见过最美的意外，也是我最想留住的幸运。',
+        '世界上有那么多人，可我的眼里只有你。',
+        '我不要短暂的温存，只要你一世的陪伴。',
+        '你是我心中的一首歌，永远唱不完。',
+        '牵着你的手，就像左手牵右手，但左手永远离不开右手。',
+        '你笑起来的样子，是我见过最美的风景。',
+        '我想用我所有的运气，换与你一生的相遇。',
+        '你是我所有的少女心事，也是我余生的柴米油盐。',
+        '如果爱你是错，我不愿意对。',
+        '我这一生遇到过很多美好的东西，但都不及你。',
+        '你不需要多好，我喜欢就好。',
+        '我想和你一起生活，在某个小镇，共享无尽的黄昏。',
+        '你是我所有的遇见里，最不想放手的那一个。',
+        '因为有你，每一天都是情人节。',
+        '我最大的愿望，就是做你的丈夫。',
+        '你是我见过最可爱的人，没有之一。',
+        '余生很长，我只想和你走。',
+        '你是我见过最温柔的风，吹散了我所有的忧愁。'
+    ];
+
+    const display = document.getElementById('quoteDisplay');
+    const btn = document.getElementById('btnQuote');
+    let lastIndex = -1;
+
+    btn.addEventListener('click', () => {
+        let idx;
+        do {
+            idx = Math.floor(Math.random() * quotes.length);
+        } while (idx === lastIndex);
+        lastIndex = idx;
+
+        display.classList.remove('animate');
+        void display.offsetWidth;
+        display.classList.add('animate');
+        display.textContent = quotes[idx];
+    });
+})();
+
+/* ========== 照片轮播 ========== */
+(function initSlideshow() {
+    const photos = ['1.jpg', '2.jpg', '3.jpg', '4.jpg', '5.jpg', '6.jpg', '7.jpg', '8.jpg'];
+    const track = document.getElementById('slideTrack');
+    const counter = document.getElementById('slideCounter');
+    const dotsContainer = document.getElementById('slideDots');
+    const prevBtn = document.getElementById('slidePrev');
+    const nextBtn = document.getElementById('slideNext');
+    let current = 0;
+
+    // 生成图片
+    photos.forEach(src => {
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = '照片';
+        track.appendChild(img);
+    });
+
+    // 生成点
+    photos.forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'slide-dot' + (i === 0 ? ' active' : '');
+        dot.addEventListener('click', () => goTo(i));
+        dotsContainer.appendChild(dot);
+    });
+
+    function goTo(idx) {
+        current = idx;
+        track.style.transform = 'translateX(-' + (current * 100) + '%)';
+        counter.textContent = (current + 1) + ' / ' + photos.length;
+        dotsContainer.querySelectorAll('.slide-dot').forEach((d, i) => {
+            d.classList.toggle('active', i === current);
+        });
+    }
+
+    prevBtn.addEventListener('click', () => goTo((current - 1 + photos.length) % photos.length));
+    nextBtn.addEventListener('click', () => goTo((current + 1) % photos.length));
+
+    // 自动播放
+    let autoPlay = setInterval(() => goTo((current + 1) % photos.length), 4000);
+    track.parentElement.addEventListener('mouseenter', () => clearInterval(autoPlay));
+    track.parentElement.addEventListener('mouseleave', () => {
+        autoPlay = setInterval(() => goTo((current + 1) % photos.length), 4000);
+    });
+})();
+
+/* ========== 爱情问答 ========== */
+(function initLoveQuiz() {
+    const questions = [
+        {
+            q: '我们是在哪一天在一起的？',
+            options: ['2025年5月20日', '2025年5月26日', '2025年6月1日', '2025年2月14日'],
+            answer: 1
+        },
+        {
+            q: '我们领证的日子是哪天？',
+            options: ['2026年1月25日', '2026年2月14日', '2026年3月14日', '2026年5月26日'],
+            answer: 1
+        },
+        {
+            q: '我们的第一次旅行去了哪里？',
+            options: ['武功山', '龙虎山', '庐山', '黄山'],
+            answer: 0
+        },
+        {
+            q: '我们第一次约会去了哪里？',
+            options: ['电影院', '新余体育馆', '商场', '公园'],
+            answer: 1
+        },
+        {
+            q: '订婚宴在哪里举办？',
+            options: ['家里', '酒店', '暨阳宴仙湖', '餐厅'],
+            answer: 2
+        },
+        {
+            q: '谁先表白的？',
+            options: ['叶霞', '李文豪', '同时表白', '朋友促成的'],
+            answer: 1
+        },
+        {
+            q: '我们的纪念日是哪一天？',
+            options: ['每月26日', '每月20日', '每月14日', '每月1日'],
+            answer: 0
+        },
+        {
+            q: '第一次生日惊喜在哪里？',
+            options: ['餐厅', '家里', '北京', '新余'],
+            answer: 2
+        }
+    ];
+
+    const startBtn = document.getElementById('btnQuizStart');
+    const nextBtn = document.getElementById('btnQuizNext');
+    const questionEl = document.getElementById('quizQuestion');
+    const optionsEl = document.getElementById('quizOptions');
+    const progressEl = document.getElementById('quizProgress');
+    const resultEl = document.getElementById('quizResult');
+
+    let currentQ = 0;
+    let score = 0;
+    let answered = false;
+
+    startBtn.addEventListener('click', () => {
+        startBtn.style.display = 'none';
+        currentQ = 0;
+        score = 0;
+        showQuestion();
+    });
+
+    nextBtn.addEventListener('click', () => {
+        currentQ++;
+        if (currentQ >= questions.length) {
+            showResult();
+        } else {
+            showQuestion();
+        }
+    });
+
+    function showQuestion() {
+        answered = false;
+        const q = questions[currentQ];
+        questionEl.textContent = (currentQ + 1) + '. ' + q.q;
+        nextBtn.style.display = 'none';
+        resultEl.style.display = 'none';
+
+        // 进度条
+        let pHtml = '';
+        questions.forEach((_, i) => {
+            const cls = i < currentQ ? 'done' : (i === currentQ ? 'current' : '');
+            pHtml += '<div class="quiz-progress-dot ' + cls + '"></div>';
+        });
+        progressEl.innerHTML = pHtml;
+
+        // 选项
+        let oHtml = '';
+        q.options.forEach((opt, i) => {
+            oHtml += '<div class="quiz-option" data-idx="' + i + '">' + opt + '</div>';
+        });
+        optionsEl.innerHTML = oHtml;
+
+        optionsEl.querySelectorAll('.quiz-option').forEach(el => {
+            el.addEventListener('click', () => {
+                if (answered) return;
+                answered = true;
+                const idx = parseInt(el.dataset.idx);
+                if (idx === q.answer) {
+                    el.classList.add('correct');
+                    score++;
+                } else {
+                    el.classList.add('wrong');
+                    optionsEl.children[q.answer].classList.add('correct');
+                }
+                nextBtn.style.display = 'block';
+                nextBtn.textContent = currentQ >= questions.length - 1 ? '查看结果 →' : '下一题 →';
+            });
+        });
+    }
+
+    function showResult() {
+        questionEl.textContent = '答题完成！';
+        optionsEl.innerHTML = '';
+        nextBtn.style.display = 'none';
+        progressEl.innerHTML = '';
+
+        resultEl.style.display = 'block';
+        let msg = '';
+        const pct = score / questions.length;
+        if (pct === 1) msg = '🏆 满分！你是真正的爱情达人！';
+        else if (pct >= 0.75) msg = '💖 太棒了！你真的很了解我们的故事！';
+        else if (pct >= 0.5) msg = '💕 不错哦！但还可以更了解我们~';
+        else msg = '💗 加油！多看看我们的故事吧~';
+
+        resultEl.innerHTML = '<div style="font-size:2rem;margin-bottom:10px;">' + score + ' / ' + questions.length + '</div>' + msg + '<br><br><button class="btn-quiz" onclick="document.getElementById(\'btnQuizStart\').click()">再来一次</button>';
+
+        startBtn.style.display = 'block';
+        startBtn.innerHTML = '<i class="fas fa-redo"></i> 重新答题';
+    }
+})();

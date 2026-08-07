@@ -2551,4 +2551,333 @@ body.season-winter { --accent: #a0c0f0; --accent-light: #b5d0f5; --accent-glow: 
     .map-board { height: 300px; }
     .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
     .qr-widget { bottom: 15px; left: 15px; }
+    .help-widget { bottom: 85px; }
+    .help-panel { width: 90vw; max-height: 70vh; }
+}
+
+/* ========== 帮助引导 ========== */
+.help-widget {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 999;
+}
+
+.help-toggle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--pink));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    font-size: 1.2rem;
+    transition: var(--transition);
+    box-shadow: 0 4px 15px var(--accent-glow);
+}
+
+.help-toggle:hover {
+    transform: scale(1.1);
+}
+
+.help-panel {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    max-width: 90vw;
+    max-height: 80vh;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    z-index: 10000;
+    backdrop-filter: blur(20px);
+}
+
+.help-panel.show {
+    display: flex;
+    flex-direction: column;
+}
+
+.help-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(124, 110, 240, 0.1);
+}
+
+.help-header h3 {
+    font-size: 1rem;
+    color: var(--accent-light);
+}
+
+.help-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 5px;
+}
+
+.help-content {
+    overflow-y: auto;
+    padding: 15px;
+    flex: 1;
+}
+
+.help-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.help-item:hover {
+    background: rgba(124, 110, 240, 0.08);
+}
+
+.help-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    width: 36px;
+    text-align: center;
+}
+
+.help-item b {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.help-item p {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-top: 2px;
+}
+
+/* ========== 情话生成器 ========== */
+.quote-machine {
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.quote-display {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 30px;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    line-height: 1.8;
+    transition: var(--transition);
+}
+
+.quote-display.animate {
+    animation: quoteGlow 2s ease;
+}
+
+@keyframes quoteGlow {
+    0% { border-color: var(--border); }
+    50% { border-color: var(--pink); box-shadow: 0 0 20px var(--pink-glow); }
+    100% { border-color: var(--border); }
+}
+
+.btn-quote {
+    background: linear-gradient(135deg, var(--pink), var(--accent));
+    border: none;
+    color: white;
+    padding: 12px 30px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+.btn-quote:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px var(--pink-glow);
+}
+
+/* ========== 照片轮播 ========== */
+.slideshow {
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.slide {
+    display: flex;
+    transition: transform 0.5s ease;
+}
+
+.slide img {
+    min-width: 100%;
+    height: 350px;
+    object-fit: cover;
+}
+
+.slide-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 12px;
+    background: var(--bg-card);
+}
+
+.slide-btn {
+    background: var(--accent);
+    border: none;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+.slide-btn:hover {
+    background: var(--accent-light);
+}
+
+.slide-counter {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.slide-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px;
+    background: var(--bg-card);
+}
+
+.slide-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.slide-dot.active {
+    background: var(--accent);
+    transform: scale(1.3);
+}
+
+/* ========== 爱情问答 ========== */
+.quiz-card {
+    max-width: 500px;
+    margin: 0 auto;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 30px;
+}
+
+.quiz-progress {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+}
+
+.quiz-progress-dot {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+}
+
+.quiz-progress-dot.done {
+    background: var(--accent);
+}
+
+.quiz-progress-dot.current {
+    background: var(--pink);
+}
+
+.quiz-question {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.quiz-option {
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.quiz-option:hover {
+    border-color: var(--accent);
+    background: rgba(124, 110, 240, 0.08);
+}
+
+.quiz-option.correct {
+    border-color: #4caf50;
+    background: rgba(76, 175, 80, 0.15);
+    color: #4caf50;
+}
+
+.quiz-option.wrong {
+    border-color: #f44336;
+    background: rgba(244, 67, 54, 0.15);
+    color: #f44336;
+}
+
+.quiz-result {
+    text-align: center;
+    padding: 20px;
+    font-size: 1.1rem;
+    color: var(--gold);
+}
+
+.btn-quiz {
+    display: block;
+    width: 100%;
+    margin-top: 15px;
+    background: var(--accent);
+    border: none;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: var(--transition);
+}
+
+.btn-quiz:hover {
+    background: var(--accent-light);
 }

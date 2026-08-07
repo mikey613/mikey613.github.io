@@ -752,6 +752,78 @@
         </div>
     </div>
 
+    <!-- 帮助引导 -->
+    <div class="help-widget" id="helpWidget">
+        <div class="help-toggle" id="helpToggle"><i class="fas fa-question"></i></div>
+        <div class="help-panel" id="helpPanel">
+            <div class="help-header">
+                <h3><i class="fas fa-heart"></i> 网站功能导览</h3>
+                <button class="help-close" id="helpClose"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="help-content">
+                <div class="help-item"><span class="help-icon">✨</span><div><b>星空背景</b><p>闪烁的星空+流星效果，点击任意位置放烟花</p></div></div>
+                <div class="help-item"><span class="help-icon">📅</span><div><b>恋爱时间线</b><p>从相遇到领证，记录我们的每一个重要时刻</p></div></div>
+                <div class="help-item"><span class="help-icon">🖼️</span><div><b>甜蜜相册</b><p>点击查看大图，支持键盘左右切换</p></div></div>
+                <div class="help-item"><span class="help-icon">💬</span><div><b>照片弹幕</b><p>浏览相册时飘过的甜蜜弹幕</p></div></div>
+                <div class="help-item"><span class="help-icon">💕</span><div><b>甜言蜜语</b><p>点击卡片翻转，看15句情话</p></div></div>
+                <div class="help-item"><span class="help-icon">✉️</span><div><b>情书</b><p>写给你的一封情书</p></div></div>
+                <div class="help-item"><span class="help-icon">🧩</span><div><b>拼图游戏</b><p>拖拽或点击交换拼图块，还原我们的照片</p></div></div>
+                <div class="help-item"><span class="help-icon">🎂</span><div><b>纪念日</b><p>计算在一起的天数，查看每个纪念日</p></div></div>
+                <div class="help-item"><span class="help-icon">⭐</span><div><b>心愿墙</b><p>写下并分享我们的心愿</p></div></div>
+                <div class="help-item"><span class="help-icon">🎫</span><div><b>爱情证书</b><p>专属我们的爱情证书</p></div></div>
+                <div class="help-item"><span class="help-icon">⏰</span><div><b>倒计时</b><p>下一个纪念日还有多久</p></div></div>
+                <div class="help-item"><span class="help-icon">📝</span><div><b>留言板</b><p>写下你的祝福和留言</p></div></div>
+                <div class="help-item"><span class="help-icon">🎁</span><div><b>刮刮卡</b><p>刮开3张神秘卡片，发现隐藏彩蛋</p></div></div>
+                <div class="help-item"><span class="help-icon">🏆</span><div><b>恋爱等级</b><p>根据在一起天数解锁称号</p></div></div>
+                <div class="help-item"><span class="help-icon">📊</span><div><b>数据站</b><p>趣味恋爱数据统计</p></div></div>
+                <div class="help-item"><span class="help-icon">🗺️</span><div><b>恋爱地图</b><p>标注我们故事发生的每个地方</p></div></div>
+                <div class="help-item"><span class="help-icon">📖</span><div><b>共同日记</b><p>记录每天一件小事</p></div></div>
+                <div class="help-item"><span class="help-icon">🎲</span><div><b>爱情大富翁</b><p>掷般子走过我们的故事</p></div></div>
+                <div class="help-item"><span class="help-icon">☁️</span><div><b>爱的词云</b><p>我们故事里的关键词</p></div></div>
+                <div class="help-item"><span class="help-icon">☀️</span><div><b>主题切换</b><p>右上角可切换白天/夜晚模式</p></div></div>
+                <div class="help-item"><span class="help-icon">🌸</span><div><b>季节主题</b><p>根据季节自动变换配色</p></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 情话生成器 -->
+    <section class="section quote-section" id="lovequote">
+        <h2 class="section-title glow-text"><i class="fas fa-heart"></i> 情话生成器</h2>
+        <p class="section-desc">点击按钮，生成一句专属情话</p>
+        <div class="quote-machine">
+            <div class="quote-display" id="quoteDisplay">\点击下方按钮 ↓</div>
+            <button class="btn-quote" id="btnQuote"><i class="fas fa-magic"></i> 生成情话</button>
+        </div>
+    </section>
+
+    <!-- 照片轮播 -->
+    <section class="section slideshow-section" id="slideshow">
+        <h2 class="section-title glow-text"><i class="fas fa-images"></i> 照片轮播</h2>
+        <div class="slideshow" id="slideshowContainer">
+            <div class="slide" id="slideTrack"></div>
+            <div class="slide-controls">
+                <button class="slide-btn" id="slidePrev"><i class="fas fa-chevron-left"></i></button>
+                <span class="slide-counter" id="slideCounter">1 / 8</span>
+                <button class="slide-btn" id="slideNext"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div class="slide-dots" id="slideDots"></div>
+        </div>
+    </section>
+
+    <!-- 爱情问答 -->
+    <section class="section quiz-section" id="lovequiz">
+        <h2 class="section-title glow-text"><i class="fas fa-question-circle"></i> 爱情问答</h2>
+        <p class="section-desc">看看你对我们的故事了解多少</p>
+        <div class="quiz-card" id="quizCard">
+            <div class="quiz-progress" id="quizProgress"></div>
+            <h3 class="quiz-question" id="quizQuestion">加载中...</h3>
+            <div class="quiz-options" id="quizOptions"></div>
+            <div class="quiz-result" id="quizResult" style="display:none;"></div>
+            <button class="btn-quiz" id="btnQuizNext" style="display:none;">下一题 →</button>
+            <button class="btn-quiz" id="btnQuizStart"><i class="fas fa-play"></i> 开始答题</button>
+        </div>
+    </section>
+
     <!-- 页脚 -->
     <footer class="site-footer">
         <div class="footer-hearts">
