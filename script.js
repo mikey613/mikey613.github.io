@@ -55,6 +55,67 @@ const GitHubSync = (function() {
     return { enabled, get, set };
 })();
 
+/* ========== 角色选择系统 ========== */
+const AppUser = (function() {
+    const KEY = 'love-user-role';
+    const USERS = {
+        hao: { name: '文豪', icon: '🤵', color: 'var(--accent-light)' },
+        xia: { name: '霞霞', icon: '👰', color: 'var(--pink)' }
+    };
+
+    function get() {
+        return localStorage.getItem(KEY) || '';
+    }
+
+    function set(role) {
+        localStorage.setItem(KEY, role);
+    }
+
+    function info(role) {
+        return USERS[role] || null;
+    }
+
+    function init() {
+        const overlay = document.getElementById('roleOverlay');
+        const badge = document.getElementById('userBadge');
+        const badgeIcon = document.getElementById('userBadgeIcon');
+        const badgeName = document.getElementById('userBadgeName');
+        const switchBtn = document.getElementById('userSwitch');
+
+        function showBadge() {
+            const role = get();
+            const u = info(role);
+            if (!u) return;
+            badgeIcon.textContent = u.icon;
+            badgeName.textContent = u.name;
+            badge.style.display = 'flex';
+            overlay.classList.add('hidden');
+        }
+
+        document.getElementById('roleHao').addEventListener('click', () => {
+            set('hao');
+            showBadge();
+        });
+
+        document.getElementById('roleXia').addEventListener('click', () => {
+            set('xia');
+            showBadge();
+        });
+
+        switchBtn.addEventListener('click', () => {
+            overlay.classList.remove('hidden');
+            badge.style.display = 'none';
+        });
+
+        // 初始化：如果已选过角色，直接显示
+        if (get()) {
+            showBadge();
+        }
+    }
+
+    return { get, set, info, init, USERS };
+})();
+
 /* ========== 星空画布 ========== */
 (function initStarCanvas() {
     const canvas = document.getElementById('starCanvas');
@@ -377,7 +438,8 @@ const GitHubSync = (function() {
         el.style.top = wish.top + '%';
         el.style.left = wish.left + '%';
         el.style.animationDelay = wish.delay + 's';
-        el.innerHTML = '<span>' + wish.text + '</span>';
+        const userIcon = wish.user && AppUser.info(wish.user) ? AppUser.info(wish.user).icon : '';
+        el.innerHTML = '<span>' + wish.text + (userIcon ? ' <small>' + userIcon + '</small>' : '') + '</span>';
         wall.appendChild(el);
     }
 
@@ -393,7 +455,8 @@ const GitHubSync = (function() {
             text: text,
             top: Math.random() * 80 + 5,
             left: Math.random() * 75 + 5,
-            delay: Math.random() * 2
+            delay: Math.random() * 2,
+            user: AppUser.get() || 'unknown'
         };
         const wishes = getWishes();
         wishes.push(wish);
@@ -862,9 +925,11 @@ window.addEventListener('load', () => {
         // 倒序显示，最新的在前面
         const sorted = [...messages].reverse();
         sorted.forEach(msg => {
+            const userIcon = msg.user && AppUser.info(msg.user) ? AppUser.info(msg.user).icon : '';
             html += '<div class="gb-item">' +
                 '<div class="gb-item-header">' +
                     '<span class="gb-item-name">' + escapeHtml(msg.name) + '</span>' +
+                    (userIcon ? '<span class="data-user-tag ' + msg.user + '">' + userIcon + '</span>' : '') +
                     '<span class="gb-item-time">' + escapeHtml(msg.time) + '</span>' +
                 '</div>' +
                 '<div class="gb-item-message">' + escapeHtml(msg.message) + '</div>' +
@@ -911,7 +976,7 @@ window.addEventListener('load', () => {
                 String(now.getDate()).padStart(2, '0') + ' ' +
                 String(now.getHours()).padStart(2, '0') + ':' +
                 String(now.getMinutes()).padStart(2, '0');
-            messages.push({ name, message, time });
+            messages.push({ name, message, time, user: AppUser.get() || 'guest' });
 
             // 写回 GitHub
             const ok = await GitHubSync.set('data/messages.json', messages, sha);
@@ -1350,9 +1415,14 @@ window.addEventListener('load', () => {
         }
         for (let d = 1; d <= daysInMonth; d++) {
             const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-            const hasEntry = diary[dateStr] ? 'has-entry' : '';
+            const entry = diary[dateStr];
+            const hasEntry = entry ? 'has-entry' : '';
             const isToday = d === today ? 'today' : '';
-            html += '<div class="diary-day ' + hasEntry + ' ' + isToday + '" title="' + (diary[dateStr] || '') + '">' + d + '</div>';
+            const entryText = typeof entry === 'object' ? entry.text : (entry || '');
+            const entryUser = typeof entry === 'object' && entry.user ? entry.user : '';
+            const userIcon = entryUser && AppUser.info(entryUser) ? AppUser.info(entryUser).icon : '';
+            const tooltip = entryText + (userIcon ? ' (' + userIcon + ')' : '');
+            html += '<div class="diary-day ' + hasEntry + ' ' + isToday + '" title="' + tooltip + '">' + d + '</div>';
         }
         calendar.innerHTML = html;
     }
@@ -1362,7 +1432,7 @@ window.addEventListener('load', () => {
         const text = textInput.value.trim();
         if (!date || !text) return;
         const diary = getDiary();
-        diary[date] = text;
+        diary[date] = { text: text, user: AppUser.get() || 'unknown' };
         save(diary);
         textInput.value = '';
         renderCalendar();
@@ -1841,9 +1911,11 @@ window.addEventListener('load', () => {
         todos.forEach((t, i) => {
             const li = document.createElement('li');
             li.className = t.done ? 'done' : '';
+            const userTag = t.user ? '<span class="data-user-tag ' + t.user + '">' + (AppUser.info(t.user) ? AppUser.info(t.user).icon : '') + '</span>' : '';
             li.innerHTML =
                 '<span class="todo-check" data-i="' + i + '">\u2713</span>' +
                 '<span>' + t.text + '</span>' +
+                userTag +
                 '<span class="todo-del" data-i="' + i + '"><i class="fas fa-times"></i></span>';
             list.appendChild(li);
         });
@@ -1853,7 +1925,7 @@ window.addEventListener('load', () => {
         const text = input.value.trim();
         if (!text) return;
         const todos = getTodos();
-        todos.push({ text: text, done: false });
+        todos.push({ text: text, done: false, user: AppUser.get() || 'unknown' });
         save(todos);
         input.value = '';
         render();
@@ -1901,7 +1973,10 @@ window.addEventListener('load', () => {
     let _sha = null;
 
     function getData() {
-        return JSON.parse(localStorage.getItem(KEY) || '{"dates":[]}');
+        const raw = JSON.parse(localStorage.getItem(KEY) || '{"dates":[]}');
+        // 兼容旧格式：将字符串数组转为对象数组
+        raw.dates = raw.dates.map(d => typeof d === 'string' ? { date: d, user: '' } : d);
+        return raw;
     }
 
     function saveLocal(data) {
@@ -1923,7 +1998,7 @@ window.addEventListener('load', () => {
 
     function getStreak() {
         const data = getData();
-        const dates = data.dates.sort();
+        const dates = data.dates.map(d => d.date).sort();
         if (dates.length === 0) return 0;
         let streak = 0;
         const today = new Date();
@@ -1951,12 +2026,14 @@ window.addEventListener('load', () => {
             const d = new Date(today);
             d.setDate(d.getDate() - i);
             const ds = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-            const checked = data.dates.includes(ds);
+            const entry = data.dates.find(e => e.date === ds);
+            const checked = !!entry;
             const isToday = i === 0;
+            const userIcon = entry && entry.user && AppUser.info(entry.user) ? AppUser.info(entry.user).icon : '';
             const div = document.createElement('div');
             div.className = 'checkin-day' + (checked ? ' checked' : '') + (isToday ? ' today' : '');
             div.textContent = d.getDate();
-            div.title = ds;
+            div.title = ds + (userIcon ? ' (' + userIcon + ')' : '');
             grid.appendChild(div);
         }
     }
@@ -1965,12 +2042,12 @@ window.addEventListener('load', () => {
         const today = new Date();
         const ds = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
         const data = getData();
-        if (data.dates.includes(ds)) {
+        if (data.dates.some(e => e.date === ds)) {
             btn.textContent = '今天已经打过卡啦 ✓';
             btn.disabled = true;
             return;
         }
-        data.dates.push(ds);
+        data.dates.push({ date: ds, user: AppUser.get() || 'unknown' });
         save(data);
         streakEl.textContent = '连续打卡: ' + getStreak() + ' 天';
         btn.textContent = '已打卡 ✓';
@@ -1988,7 +2065,7 @@ window.addEventListener('load', () => {
         const today = new Date();
         const ds = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
         const data = getData();
-        if (data.dates.includes(ds)) {
+        if (data.dates.some(e => e.date === ds)) {
             btn.textContent = '已打卡 ✓';
             btn.disabled = true;
         }
@@ -2133,11 +2210,14 @@ window.addEventListener('load', () => {
             const d = new Date(today);
             d.setDate(d.getDate() - i);
             const ds = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-            const mood = data[ds];
+            const entry = data[ds];
+            const emoji = typeof entry === 'object' ? entry.emoji : (entry || '');
+            const user = typeof entry === 'object' && entry.user ? entry.user : '';
+            const userIcon = user && AppUser.info(user) ? AppUser.info(user).icon : '';
             const div = document.createElement('div');
             div.className = 'mood-dot';
-            div.textContent = mood || '';
-            div.title = ds + (mood ? ': ' + mood : '');
+            div.textContent = emoji;
+            div.title = ds + (emoji ? ': ' + emoji : '') + (userIcon ? ' (' + userIcon + ')' : '');
             history.appendChild(div);
         }
     }
@@ -2148,7 +2228,7 @@ window.addEventListener('load', () => {
         const today = new Date();
         const ds = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
         const data = getData();
-        data[ds] = emoji.textContent;
+        data[ds] = { emoji: emoji.textContent, user: AppUser.get() || 'unknown' };
         save(data);
 
         picker.querySelectorAll('.mood-emoji').forEach(e => e.classList.remove('selected'));
@@ -2168,10 +2248,14 @@ window.addEventListener('load', () => {
         const ds = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
         const data = getData();
         if (data[ds]) {
+            const todayEmoji = typeof data[ds] === 'object' ? data[ds].emoji : data[ds];
             picker.querySelectorAll('.mood-emoji').forEach(e => {
-                if (e.textContent === data[ds]) e.classList.add('selected');
+                if (e.textContent === todayEmoji) e.classList.add('selected');
             });
         }
         renderHistory();
     })();
 })();
+
+/* ========== 初始化角色系统 ========== */
+AppUser.init();

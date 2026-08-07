@@ -10,6 +10,32 @@
 </head>
 <body>
 
+    <!-- 角色选择 -->
+    <div class="role-overlay" id="roleOverlay">
+        <div class="role-card">
+            <div class="role-hearts">💕</div>
+            <h2>欢迎来到我们的星空</h2>
+            <p>请选择你的身份</p>
+            <div class="role-btns">
+                <button class="role-btn role-hao" id="roleHao">
+                    <span class="role-emoji">🤵</span>
+                    <span class="role-name">文豪</span>
+                </button>
+                <button class="role-btn role-xia" id="roleXia">
+                    <span class="role-emoji">👰</span>
+                    <span class="role-name">霞霞</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 当前用户标识 -->
+    <div class="user-badge" id="userBadge" style="display:none;">
+        <span id="userBadgeIcon"></span>
+        <span id="userBadgeName"></span>
+        <button class="user-switch" id="userSwitch" title="切换身份"><i class="fas fa-exchange-alt"></i></button>
+    </div>
+
     <!-- 星空画布 -->
     <canvas id="starCanvas"></canvas>
 
