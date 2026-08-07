@@ -1,0 +1,34 @@
+# 当收到 repository_dispatch 事件时触发
+on:
+  repository_dispatch:
+    types: [new_message]
+
+name: Add Message
+
+jobs:
+  add-message:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Add new message
+        run: |
+          # 从事件负载中提取留言信息
+          NAME="${{ github.event.client_payload.name }}"
+          MSG="${{ github.event.client_payload.message }}"
+          TIME=$(date '+%Y-%m-%d %H:%M')
+
+          # 用 jq 追加到 messages.json
+          jq --arg name "$NAME" --arg msg "$MSG" --arg time "$TIME" \
+            '. += [{"name": $name, "message": $msg, "time": $time}]' \
+            data/messages.json > data/messages_tmp.json
+          mv data/messages_tmp.json data/messages.json
+
+      - name: Commit and push
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add data/messages.json
+          git commit -m "📝 新留言 from ${{ github.event.client_payload.name }}"
+          git push

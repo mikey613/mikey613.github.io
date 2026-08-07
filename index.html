@@ -3,384 +3,641 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>李文豪 & 叶霞 | 订婚宴邀请函</title>
+    <title>李文豪 & 叶霞 | 属于我们的星空</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css"> <!-- 引入外部CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    
-    <!-- 粒子背景 -->
-    <div id="particle-container"></div>
-    
-    <!-- 背景装饰 -->
-    <div class="bg-decoration bg-heart">❤️</div>
-    <div class="bg-decoration bg-ring">💍</div>
-    <div class="bg-decoration bg-flower">🌸</div>
-    
-    <div class="page-container">
-        <!-- 封面页（订婚宴主题） -->
-        <div class="page-section cover-page active" id="cover">
-            <div class="cover-ornament">
-                <div class="ornament"></div>
-                <div class="ornament"></div>
-                <div class="ornament"></div>
-            </div>
-            
-            <div class="ring-icon">💍</div>
-            
-            <h1 class="cover-title">订婚宴邀请函</h1>
-            
-            <div class="couple-names">
-                <div class="name">李文豪&nbsp;&nbsp;❤️&nbsp;&nbsp;叶霞</div>
-<!--                <div class="heart"></div>-->
-<!--                <div class="name"></div>-->
-            </div>
-            
-            <div class="wedding-info">
-                <div class="info-item">
-                    <i class="fas fa-calendar-check"></i>
-                    <span class="info-date" id="engagement-date">2026年01月25日 中午</span>
-                </div>
-                <div class="info-item">
-                    <i class="fas fa-moon"></i>
-                    <span id="lunar-date">农历十二月初七 星期天</span>
-                </div>
-                <div class="info-item">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span id="location">席设暨阳宴仙湖三楼大厅</span>
-                </div>
-            </div>
-            
-            <div class="cover-ornament">
-                <div class="ornament"></div>
-                <div class="ornament"></div>
-                <div class="ornament"></div>
-            </div>
-            
-            <p class="typewriter" style="font-size: 18px; color: var(--accent-color); margin-top: 20px;">
-                诚邀您见证我们的幸福时刻
-            </p>
-        </div>
-        
-        <!-- 爱的故事（时间线） -->
-        <div class="page-section" id="story">
-            <h2 class="section-title"><i class="fas fa-heart"></i> 我们的爱情故事</h2>
-            
-            <div class="timeline">
-                <div class="timeline-item">
-                    <div class="timeline-date">高中时期</div>
-                    <div class="timeline-content">
-                        于学校茫茫人海中相遇，一个机缘便注定了缘分的开始，我们的故事从此写下序章
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-date">大学时期</div>
-                    <div class="timeline-content">
-                        大学期间，我们经历了各种各样的事情，但最终我们还是有保持联系。
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-date">社会期间保持联系</div>
-                    <div class="timeline-content">
-                        一块云做饭，你教我烹饪最简单的番茄炒蛋，我们一起分享生活的点滴。
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-date">趣事：2025年03月31日</div>
-                    <div class="timeline-content">
-                        一件趣事：你整天步数 76 ！我给你点赞，你找我理论，至此我们的聊天渐渐多了起来。
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-date">多年后的再次相聚：2025年05月04日</div>
-                    <div class="timeline-content">
-                        新余体育馆的相约散步，聊天，回忆往事，洽谈当下。
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-date">计划爬山：2025年05月18日</div>
-                    <div class="timeline-content">
-                        微信计划一块爬武功山，你说你不行，我说我也不行，最后你说你行，我说我也行。
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-date">激情告白：2025年05月26日</div>
-                    <div class="timeline-content">
-                        小妞，做我女朋友💐。
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-date">爬山：2025年06月01日</div>
-                    <div class="timeline-content">
-                        爬了个寂寞，下雨三天，只能逛逛商场，吃吃美食。
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-date">待开发...</div>
-                    <div class="timeline-content">
-                        原因：中午了吃饭去了。
-                    </div>
-                </div>
+    <!-- 星空画布 -->
+    <canvas id="starCanvas"></canvas>
 
-<!--                <div class="timeline-item">-->
-<!--                    <div class="timeline-date">订婚日：2026年01月25日</div>-->
-<!--                    <div class="timeline-content">-->
-<!--                        订婚宴当天，我们将在亲友的见证下，许下相守一生的承诺-->
-<!--                    </div>-->
-<!--                </div>-->
-            </div>
-        </div>
-        
-        <!-- 幸福瞬间（照片轮播） -->
-        <div class="page-section" id="photos">
-            <h2 class="section-title"><i class="fas fa-images"></i> 幸福瞬间</h2>
-            
-            <div class="carousel-container">
-                <div class="carousel" id="photo-carousel">
-                    <!-- 轮播项将通过JS动态添加 -->
-                </div>
-                <div class="carousel-nav carousel-prev">❮</div>
-                <div class="carousel-nav carousel-next">❯</div>
-            </div>
-            
-            <div class="carousel-controls" id="carousel-dots">
-                <!-- 轮播点将通过JS动态添加 -->
-            </div>
-        </div>
-        
-        <!-- 订婚邀请 -->
-        <div class="page-section" id="invitation">
-            <h2 class="section-title"><i class="fas fa-envelope-heart"></i> 诚挚邀请</h2>
-            
-            <div class="invitation-card">
-                <div class="invitation-ornament top"></div>
-                
-                <div class="invitation-header">
-                    <div class="heart-decoration"></div>
-                    <p class="invitation-text" style="color: white;">亲爱的亲友：</p>
-                </div>
-                
-                <div class="invitation-content">
-                    <p class="invitation-text">时光荏苒，岁月如歌。在经历了相识、相知、相爱的美好历程后，我们即将迎来人生中最重要的时刻——订婚之喜。</p>
-                    <p class="invitation-text">我们深知，这份幸福离不开各位的陪伴与祝福。因此，我们诚挚地邀请您拨冗出席我们的订婚宴，与我们共同分享这份喜悦。</p>
-                    <p class="invitation-text">愿您的到来，为我们的订婚仪式增添最珍贵的光彩，也让我们的幸福因您的见证而更加完整。</p>
-                    <p class="invitation-text">期待与您相聚，共话情谊，共享喜悦！</p>
-                </div>
-                
-                <div class="invitation-footer">
-                    <p class="invitation-text" style="text-align: right;">—— 李文豪 & 叶霞 敬邀</p>
-                    <div class="invitation-ornament bottom"></div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 倒计时 -->
-        <div id="countdown" class="page-section">
-            <h2 class="section-title"><i class="fas fa-clock"></i> 期待与您相见</h2>
-            <div class="countdown-timer">
-                <div class="countdown-item">
-                    <div class="countdown-number" id="days">00</div>
-                    <div class="countdown-label">天</div>
-                    <div class="countdown-glow"></div>
-                </div>
-                <div class="countdown-separator">:</div>
-                <div class="countdown-item">
-                    <div class="countdown-number" id="hours">00</div>
-                    <div class="countdown-label">时</div>
-                    <div class="countdown-glow"></div>
-                </div>
-                <div class="countdown-separator">:</div>
-                <div class="countdown-item">
-                    <div class="countdown-number" id="minutes">00</div>
-                    <div class="countdown-label">分</div>
-                    <div class="countdown-glow"></div>
-                </div>
-                <div class="countdown-separator">:</div>
-                <div class="countdown-item">
-                    <div class="countdown-number" id="seconds">00</div>
-                    <div class="countdown-label">秒</div>
-                    <div class="countdown-glow"></div>
-                </div>
-            </div>
-            <div class="countdown-message">
-                <p>我们的订婚宴即将开始，期待与您共同见证幸福时刻！</p>
-            </div>
-        </div>
-        
-        <!-- 嘉宾祝福留言板 -->
-        <div id="message-board" class="page-section">
-            <h2 class="section-title">嘉宾祝福</h2>
-            <div class="message-container">
-                <div class="message-input-area">
-                    <div class="input-group">
-                        <label for="guest-name">您的姓名：</label>
-                        <input type="text" id="guest-name" placeholder="请输入您的姓名" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="guest-message">您的祝福：</label>
-                        <textarea id="guest-message" placeholder="请留下您的美好祝福..." rows="4" required></textarea>
-                    </div>
-                    <button id="submit-message" class="wish-btn">发送祝福</button>
-                </div>
-                
-                <div class="messages-list">
-                    <h3>祝福墙</h3>
-                    <div id="messages-container">
-                        <!-- 示例祝福 -->
-                        <div class="message-item">
-                            <div class="message-header">
-                                <span class="message-name">李富贵</span>
-                                <span class="message-time">2026-12-12 12:12</span>
-                            </div>
-                            <div class="message-content">祝新人百年好合，永结同心！</div>
-                        </div>
-                        <div class="message-item">
-                            <div class="message-header">
-                                <span class="message-name">李翠花</span>
-                                <span class="message-time">2026-12-12 12:12</span>
-                            </div>
-                            <div class="message-content">愿你们的爱情如钻石般永恒闪耀！</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 交通指引 -->
-        <div class="page-section" id="traffic">
-            <h2 class="section-title"><i class="fas fa-map-signs"></i> 交通指引</h2>
-            
-            <div class="location-container">
-                <div class="location-map">
-                    <div class="map-placeholder">
-                        <div class="map-globe">
-                            <i class="fas fa-globe-asia"></i>
-                        </div>
-                        <h3>宴会地点</h3>
-                        <p class="location-address">宴设暨阳宴仙湖三楼大厅</p>
-                        <a href="javascript:void(0)"
-                           onclick="window.open('https://map.baidu.com/poi/%E5%AE%B4%E4%BB%99%E6%B9%96(%E6%9A%A8%E9%98%B3%E5%BA%97)/@12796046.625146868,3209805.386799378,13z?uid=49556d9b17a4d85417c8f6e7&ugc_type=3&ugc_ver=1&device_ratio=1&compat=1&en_uid=49556d9b17a4d85417c8f6e7&pcevaname=pc4.1&querytype=detailConInfo&da_src=shareurl', '_blank')"
-                           class="btn btn-primary map-btn">
-                            <i class="fas fa-directions"></i> 导航到新余市暨阳宴仙湖
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="traffic-info">
-                    <div class="traffic-item metro">
-                        <div class="traffic-icon">
-                            <i class="fas fa-subway"></i>
-                        </div>
-                        <div class="traffic-content">
-                            <h4>地铁出行</h4>
-                            <p>乘坐地铁X号线至XX站（D口出），步行约800米即可到达</p>
-                        </div>
-                    </div>
-                    
-                    <div class="traffic-item bus">
-                        <div class="traffic-icon">
-                            <i class="fas fa-bus"></i>
-                        </div>
-                        <div class="traffic-content">
-                            <h4>公交出行</h4>
-                            <p>乘坐XX路、XX路、XX路公交至XX站下车，步行约300米</p>
-                        </div>
-                    </div>
-                    
-                    <div class="traffic-item car">
-                        <div class="traffic-icon">
-                            <i class="fas fa-car"></i>
-                        </div>
-                        <div class="traffic-content">
-                            <h4>自驾出行</h4>
-                            <p>导航搜索"XX酒店"，酒店提供免费停车位（数量有限，建议提前到达）</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
+    <!-- 流星层 -->
+    <div id="shooting-stars"></div>
 
-        
-        <!-- 页脚 -->
-        <div class="footer page-section" id="footer">
-            <button class="wish-btn" id="open-share-modal" style="background: linear-gradient(135deg, #6c5ce7, #a29bfe); margin: 0 auto 25px; display: block;">
-                <i class="fas fa-share-alt"></i> 分享喜讯
+    <!-- 导航栏 -->
+    <nav class="nav-bar" id="navbar">
+        <div class="nav-brand">💑 L & Y</div>
+        <div class="nav-links">
+            <a href="#hero" class="nav-link active">首页</a>
+            <a href="#timeline" class="nav-link">故事</a>
+            <a href="#gallery" class="nav-link">相册</a>
+            <a href="#scrollstory" class="nav-link">长卷</a>
+            <a href="#loveletter" class="nav-link">情书</a>
+            <a href="#puzzle" class="nav-link">游戏</a>
+            <a href="#countdown" class="nav-link">纪念</a>
+            <a href="#certificate" class="nav-link">证书</a>
+            <a href="#nextanni" class="nav-link">倒计时</a>
+            <a href="#wishes" class="nav-link">心愿</a>
+            <a href="#guestbook" class="nav-link">留言</a>
+        </div>
+        <button class="theme-toggle" id="themeToggle" title="切换白天/夜晚模式">
+            <i class="fas fa-sun"></i>
+        </button>
+        <div class="nav-toggle" id="navToggle">
+            <span></span><span></span><span></span>
+        </div>
+    </nav>
+
+    <!-- 首页 Hero -->
+    <section class="hero" id="hero">
+        <div class="hero-content">
+            <div class="glow-ring"></div>
+            <div class="couple-photo">
+                <div class="photo-frame frame-left">
+                    <img src="1.jpg" alt="李文豪">
+                </div>
+                <div class="heart-connector">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div class="photo-frame frame-right">
+                    <img src="2.jpg" alt="叶霞">
+                </div>
+            </div>
+            <h1 class="hero-title">
+                <span class="name-left">李文豪</span>
+                <span class="amp">&</span>
+                <span class="name-right">叶霞</span>
+            </h1>
+            <p class="hero-subtitle typewriter-text" id="typewriterText"></p>
+            <span class="typewriter-cursor" id="typewriterCursor">|</span>
+            <div class="love-counter">
+                <div class="counter-item">
+                    <span class="counter-num" id="love-days">0</span>
+                    <span class="counter-label">天</span>
+                </div>
+                <div class="counter-sep">:</div>
+                <div class="counter-item">
+                    <span class="counter-num" id="love-hours">0</span>
+                    <span class="counter-label">时</span>
+                </div>
+                <div class="counter-sep">:</div>
+                <div class="counter-item">
+                    <span class="counter-num" id="love-minutes">0</span>
+                    <span class="counter-label">分</span>
+                </div>
+                <div class="counter-sep">:</div>
+                <div class="counter-item">
+                    <span class="counter-num" id="love-seconds">0</span>
+                    <span class="counter-label">秒</span>
+                </div>
+            </div>
+            <p class="love-since">从 2025年05月26日 起，我们在一起</p>
+            <div class="visitor-badge" id="visitorBadge">
+                <i class="fas fa-eye"></i> 你是第 <span id="visitorCount">0</span> 位见证我们幸福的人
+            </div>
+            <a href="#timeline" class="scroll-hint">
+                <i class="fas fa-chevron-down"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- 爱情时间线 -->
+    <section class="section timeline-section" id="timeline">
+        <h2 class="section-title glow-text">
+            <i class="fas fa-book-heart"></i> 我们的故事
+        </h2>
+        <div class="timeline-wrapper">
+            <div class="timeline-line"></div>
+
+            <div class="timeline-item tl-left" data-aos="fade-right">
+                <div class="tl-dot"></div>
+                <div class="tl-card">
+                    <div class="tl-date">高中时期</div>
+                    <div class="tl-icon"><i class="fas fa-school"></i></div>
+                    <p>于学校茫茫人海中相遇，一个机缘便注定了缘分的开始，我们的故事从此写下序章。</p>
+                </div>
+            </div>
+
+            <div class="timeline-item tl-right" data-aos="fade-left">
+                <div class="tl-dot"></div>
+                <div class="tl-card">
+                    <div class="tl-date">大学时期</div>
+                    <div class="tl-icon"><i class="fas fa-graduation-cap"></i></div>
+                    <p>大学期间，我们经历了各种各样的事情，但最终我们还是有保持联系。</p>
+                </div>
+            </div>
+
+            <div class="timeline-item tl-left" data-aos="fade-right">
+                <div class="tl-dot"></div>
+                <div class="tl-card">
+                    <div class="tl-date">社会期间</div>
+                    <div class="tl-icon"><i class="fas fa-utensils"></i></div>
+                    <p>一块云做饭，你教我烹饪最简单的番茄炒蛋，我们一起分享生活的点滴。</p>
+                </div>
+            </div>
+
+            <div class="timeline-item tl-right" data-aos="fade-left">
+                <div class="tl-dot"></div>
+                <div class="tl-card">
+                    <div class="tl-date">2025.03.31</div>
+                    <div class="tl-icon"><i class="fas fa-laugh-squint"></i></div>
+                    <p>一件趣事：你整天步数 76！我给你点赞，你找我理论，至此我们的聊天渐渐多了起来。</p>
+                </div>
+            </div>
+
+            <div class="timeline-item tl-left" data-aos="fade-right">
+                <div class="tl-dot"></div>
+                <div class="tl-card">
+                    <div class="tl-date">2025.05.04</div>
+                    <div class="tl-icon"><i class="fas fa-walking"></i></div>
+                    <p>新余体育馆的相约散步，聊天，回忆往事，洽谈当下。</p>
+                </div>
+            </div>
+
+            <div class="timeline-item tl-right" data-aos="fade-left">
+                <div class="tl-dot"></div>
+                <div class="tl-card">
+                    <div class="tl-date">2025.05.18</div>
+                    <div class="tl-icon"><i class="fas fa-mountain"></i></div>
+                    <p>计划一块爬武功山，你说你不行，我说我也不行，最后你说你行，我说我也行。</p>
+                </div>
+            </div>
+
+            <div class="timeline-item tl-left tl-highlight" data-aos="fade-right">
+                <div class="tl-dot"></div>
+                <div class="tl-card">
+                    <div class="tl-date">2025.05.26 ✨</div>
+                    <div class="tl-icon"><i class="fas fa-heart"></i></div>
+                    <p>小妞，做我女朋友💐。 — 从这一天起，我们正式在一起了！</p>
+                </div>
+            </div>
+
+            <div class="timeline-item tl-right" data-aos="fade-left">
+                <div class="tl-dot"></div>
+                <div class="tl-card">
+                    <div class="tl-date">2025.06.01</div>
+                    <div class="tl-icon"><i class="fas fa-cloud-rain"></i></div>
+                    <p>爬了个寂寞，下雨三天，只能逛逛商场，吃吃美食。</p>
+                </div>
+            </div>
+
+            <div class="timeline-item tl-left" data-aos="fade-right">
+                <div class="tl-dot"></div>
+                <div class="tl-card">
+                    <div class="tl-date">2025.06.13</div>
+                    <div class="tl-icon"><i class="fas fa-birthday-cake"></i></div>
+                    <p>今天是我滴生日，亲爱的她给我点了外卖（北京烤鸭、生日蛋糕），还斥巨资送了我一个键盘，还有第一次收到的鲜花💐。</p>
+                </div>
+            </div>
+
+            <div class="timeline-item tl-right tl-highlight" data-aos="fade-left">
+                <div class="tl-dot"></div>
+                <div class="tl-card">
+                    <div class="tl-date">2026.01.25 💍</div>
+                    <div class="tl-icon"><i class="fas fa-ring"></i></div>
+                    <p>订婚宴当天，在亲友的见证下，我们许下了相守一生的承诺。</p>
+                </div>
+            </div>
+
+            <div class="timeline-item tl-left tl-highlight" data-aos="fade-right">
+                <div class="tl-dot"></div>
+                <div class="tl-card">
+                    <div class="tl-date">2026.02.14 💒</div>
+                    <div class="tl-icon"><i class="fas fa-heart"></i></div>
+                    <p>情人节这天，我们领了结婚证！从此不仅是恋人，更是法律上的家人。余生请多指教，我的妻子。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 幸福相册 -->
+    <section class="section gallery-section" id="gallery">
+        <h2 class="section-title glow-text">
+            <i class="fas fa-camera-retro"></i> 幸福相册
+        </h2>
+        <!-- 照片弹幕层 -->
+        <div class="danmaku-container" id="danmakuContainer"></div>
+        <div class="gallery-grid">
+            <div class="gallery-item" data-index="0">
+                <img src="1.jpg" alt="瞬间1">
+                <div class="gallery-overlay">
+                    <i class="fas fa-search-plus"></i>
+                    <span>我们的故事</span>
+                </div>
+            </div>
+            <div class="gallery-item" data-index="1">
+                <img src="2.jpg" alt="瞬间2">
+                <div class="gallery-overlay">
+                    <i class="fas fa-search-plus"></i>
+                    <span>甜蜜时光</span>
+                </div>
+            </div>
+            <div class="gallery-item" data-index="2">
+                <img src="3.jpg" alt="瞬间3">
+                <div class="gallery-overlay">
+                    <i class="fas fa-search-plus"></i>
+                    <span>美好回忆</span>
+                </div>
+            </div>
+            <div class="gallery-item" data-index="3">
+                <img src="4.jpg" alt="瞬间4">
+                <div class="gallery-overlay">
+                    <i class="fas fa-search-plus"></i>
+                    <span>幸福瞬间</span>
+                </div>
+            </div>
+            <div class="gallery-item" data-index="4">
+                <img src="5.jpg" alt="瞬间5">
+                <div class="gallery-overlay">
+                    <i class="fas fa-search-plus"></i>
+                    <span>浪漫时刻</span>
+                </div>
+            </div>
+            <div class="gallery-item" data-index="5">
+                <img src="6.jpg" alt="瞬间6">
+                <div class="gallery-overlay">
+                    <i class="fas fa-search-plus"></i>
+                    <span>温馨记忆</span>
+                </div>
+            </div>
+            <div class="gallery-item" data-index="6">
+                <img src="7.jpg" alt="瞬间7">
+                <div class="gallery-overlay">
+                    <i class="fas fa-search-plus"></i>
+                    <span>爱的印记</span>
+                </div>
+            </div>
+            <div class="gallery-item" data-index="7">
+                <img src="8.jpg" alt="瞬间8">
+                <div class="gallery-overlay">
+                    <i class="fas fa-search-plus"></i>
+                    <span>未来可期</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图片查看器 -->
+        <div class="lightbox" id="lightbox">
+            <span class="lightbox-close" id="lightboxClose">&times;</span>
+            <span class="lightbox-prev" id="lightboxPrev">&#10094;</span>
+            <span class="lightbox-next" id="lightboxNext">&#10095;</span>
+            <img src="" alt="" id="lightboxImg">
+            <div class="lightbox-counter" id="lightboxCounter"></div>
+        </div>
+    </section>
+
+    <!-- 滚动叙事长卷 -->
+    <section class="section scroll-story-section" id="scrollstory">
+        <h2 class="section-title glow-text">
+            <i class="fas fa-scroll"></i> 爱的长卷
+        </h2>
+        <div class="scroll-story">
+            <div class="story-chapter" data-chapter="1">
+                <div class="chapter-visual">
+                    <div class="chapter-icon"><i class="fas fa-school"></i></div>
+                    <div class="chapter-bg-circle c1"></div>
+                </div>
+                <div class="chapter-text">
+                    <h3>序章 · 茫茫人海</h3>
+                    <p>高中的校园里，人潮涌动。谁也没有想到，一次不经意的擦肩，竟成了命运写下的最美伏笔。</p>
+                </div>
+            </div>
+            <div class="story-chapter" data-chapter="2">
+                <div class="chapter-visual">
+                    <div class="chapter-icon"><i class="fas fa-comments"></i></div>
+                    <div class="chapter-bg-circle c2"></div>
+                </div>
+                <div class="chapter-text">
+                    <h3>第二章 · 步数76的缘分</h3>
+                    <p>2025年3月31日，一个点赞，一条消息。你气鼓鼓地来找我理论，我却发现，原来和你聊天是这么开心的事。</p>
+                </div>
+            </div>
+            <div class="story-chapter" data-chapter="3">
+                <div class="chapter-visual">
+                    <div class="chapter-icon"><i class="fas fa-heart"></i></div>
+                    <div class="chapter-bg-circle c3"></div>
+                </div>
+                <div class="chapter-text">
+                    <h3>第三章 · 告白</h3>
+                    <p>2025年5月26日，"小妞，做我女朋友💐"。简单的几个字，却是我这辈子最勇敢的决定。</p>
+                </div>
+            </div>
+            <div class="story-chapter" data-chapter="4">
+                <div class="chapter-visual">
+                    <div class="chapter-icon"><i class="fas fa-ring"></i></div>
+                    <div class="chapter-bg-circle c4"></div>
+                </div>
+                <div class="chapter-text">
+                    <h3>第四章 · 订婚</h3>
+                    <p>2026年1月25日，在亲友的见证下，我们许下了相守一生的承诺。这不是终点，而是新故事的起点。</p>
+                </div>
+            </div>
+            <div class="story-chapter" data-chapter="5">
+                <div class="chapter-visual">
+                    <div class="chapter-icon"><i class="fas fa-heart"></i></div>
+                    <div class="chapter-bg-circle c3"></div>
+                </div>
+                <div class="chapter-text">
+                    <h3>第五章 · 领证</h3>
+                    <p>2026年2月14日，情人节。我们领了结婚证，从此不仅是恋人，更是法律上的家人。余生，请多指教。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 情书 -->
+    <section class="section letter-section" id="loveletter">
+        <h2 class="section-title glow-text">
+            <i class="fas fa-envelope-open-text"></i> 情书
+        </h2>
+        <div class="letter-container">
+            <div class="letter-card" id="letterCard">
+                <div class="letter-stamp">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div class="letter-content">
+                    <p class="letter-greeting">亲爱的霞：</p>
+                    <p class="letter-body">
+                        从高中茫茫人海中的初次相遇，到多年后再次相恋，命运早已将我们的线牵在一起。从告白到订婚，再到情人节领证，每一步都走得那么坚定。
+                    </p>
+                    <p class="letter-body">
+                        还记得那天你的步数只有76步，我忍不住给你点了个赞，没想到这个小小的互动，成了我们故事的转折点。从那以后，我们的聊天渐渐多了起来，才发现原来彼此一直在心里。
+                    </p>
+                    <p class="letter-body">
+                        新余体育馆的散步、计划爬武功山的对话、下雨天一起逛商场吃美食……每一个平凡的瞬间，因为有你，都变得闪闪发光。
+                    </p>
+                    <p class="letter-body">
+                        谢谢你在我生日时精心准备的惊喜，谢谢你给我的温暖和陪伴。和你在一起的每一天，我都在心里默默感谢上天的安排。
+                    </p>
+                    <p class="letter-body">
+                        未来的路还很长，但我相信，只要牵着你的手，就没有到不了的远方。
+                    </p>
+                    <p class="letter-body highlight-text">
+                        余生请多指教，我的妻子。
+                    </p>
+                    <p class="letter-sign">永远爱你的豪 <i class="fas fa-heart"></i></p>
+                </div>
+            </div>
+
+            <!-- 翻转卡片：甜言蜜语 -->
+            <div class="sweet-words">
+                <div class="sweet-card" id="sweetCard">
+                    <div class="sweet-front">
+                        <i class="fas fa-quote-left"></i>
+                        <p>点击翻转</p>
+                    </div>
+                    <div class="sweet-back">
+                        <p id="sweetText">你是我见过最美的星空</p>
+                    </div>
+                </div>
+                <button class="btn-next-quote" id="nextQuote">
+                    <i class="fas fa-sync-alt"></i> 换一句
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 纪念日 -->
+    <section class="section countdown-section" id="countdown">
+        <h2 class="section-title glow-text">
+            <i class="fas fa-calendar-heart"></i> 重要纪念日
+        </h2>
+        <div class="anniversary-grid">
+            <div class="anniversary-card">
+                <div class="anni-icon"><i class="fas fa-heart"></i></div>
+                <h3>在一起</h3>
+                <p class="anni-date">2025.05.26</p>
+                <p class="anni-count" id="anni-together"></p>
+            </div>
+            <div class="anniversary-card">
+                <div class="anni-icon"><i class="fas fa-ring"></i></div>
+                <h3>订婚日</h3>
+                <p class="anni-date">2026.01.25</p>
+                <p class="anni-count" id="anni-engagement"></p>
+            </div>
+            <div class="anniversary-card">
+                <div class="anni-icon"><i class="fas fa-heart"></i></div>
+                <h3>领证日</h3>
+                <p class="anni-date">2026.02.14</p>
+                <p class="anni-count" id="anni-marriage"></p>
+            </div>
+            <div class="anniversary-card">
+                <div class="anni-icon"><i class="fas fa-birthday-cake"></i></div>
+                <h3>他的生日</h3>
+                <p class="anni-date">06.13</p>
+                <p class="anni-count" id="anni-his-birthday"></p>
+            </div>
+            <div class="anniversary-card">
+                <div class="anni-icon"><i class="fas fa-star"></i></div>
+                <h3>初次相遇</h3>
+                <p class="anni-date">高中时期</p>
+                <p class="anni-count">那是故事的开始</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 回忆拼图小游戏 -->
+    <section class="section puzzle-section" id="puzzle">
+        <h2 class="section-title glow-text">
+            <i class="fas fa-puzzle-piece"></i> 回忆拼图
+        </h2>
+        <p class="puzzle-desc">拖动碎片，拼出属于我们的回忆</p>
+        <div class="puzzle-controls">
+            <select id="puzzleImage" class="puzzle-select">
+                <option value="1">照片 1</option>
+                <option value="2">照片 2</option>
+                <option value="3">照片 3</option>
+                <option value="4">照片 4</option>
+                <option value="5">照片 5</option>
+                <option value="6">照片 6</option>
+                <option value="7">照片 7</option>
+                <option value="8">照片 8</option>
+            </select>
+            <button class="btn-shuffle" id="shufflePuzzle"><i class="fas fa-random"></i> 打乱</button>
+        </div>
+        <div class="puzzle-board" id="puzzleBoard">
+            <!-- 3x3 拼图格子由JS生成 -->
+        </div>
+        <div class="puzzle-complete" id="puzzleComplete">
+            <i class="fas fa-check-circle"></i> 恭喜拼完！每一段回忆都值得珍藏 💕
+        </div>
+    </section>
+
+    <!-- 心愿墙 -->
+    <section class="section wishes-section" id="wishes">
+        <h2 class="section-title glow-text">
+            <i class="fas fa-star"></i> 我们的心愿
+        </h2>
+        <div class="wishes-container">
+            <div class="wish-input-area">
+                <input type="text" id="wishInput" placeholder="写下你们的心愿..." maxlength="50">
+                <button id="addWish" class="btn-add-wish">
+                    <i class="fas fa-plus"></i> 添加心愿
+                </button>
+            </div>
+            <div class="wishes-wall" id="wishesWall">
+                <!-- 预设心愿 -->
+                <div class="wish-star" style="top:10%;left:15%">
+                    <span>一起去看极光</span>
+                </div>
+                <div class="wish-star" style="top:25%;left:60%">
+                    <span>养一只猫</span>
+                </div>
+                <div class="wish-star" style="top:45%;left:30%">
+                    <span>一起去旅行</span>
+                </div>
+                <div class="wish-star" style="top:60%;left:70%">
+                    <span>每天都说晚安</span>
+                </div>
+                <div class="wish-star" style="top:75%;left:20%">
+                    <span>白头偕老</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 全屏飘浮爱心 -->
+    <div class="floating-hearts" id="floatingHearts"></div>
+
+    <!-- 爱情证书 -->
+    <section class="section certificate-section" id="certificate">
+        <h2 class="section-title glow-text">
+            <i class="fas fa-award"></i> 爱情证书
+        </h2>
+        <div class="certificate-wrapper">
+            <div class="certificate" id="certificate">
+                <div class="cert-border">
+                    <div class="cert-corner tl"></div>
+                    <div class="cert-corner tr"></div>
+                    <div class="cert-corner bl"></div>
+                    <div class="cert-corner br"></div>
+                    <div class="cert-header">
+                        <div class="cert-seal">❤️</div>
+                        <h2>爱情证书</h2>
+                        <p class="cert-subtitle">CERTIFICATE OF LOVE</p>
+                    </div>
+                    <div class="cert-body">
+                        <p class="cert-text">兹证明</p>
+                        <div class="cert-names">
+                            <span class="cert-name">李文豪</span>
+                            <span class="cert-and">&</span>
+                            <span class="cert-name">叶霞</span>
+                        </div>
+                        <p class="cert-text">
+                            二人自 <strong>2025年05月26日</strong> 起正式确立恋爱关系，
+                            经过时间的考验，感情始终如一，真心不变。
+                        </p>
+                        <p class="cert-text">
+                            已于 <strong>2026年02月14日</strong> 正式登记结婚，
+                            特颁此证，以兹证明二人的爱情真实有效，
+                            有效期至 <strong>永远</strong>。
+                        </p>
+                    </div>
+                    <div class="cert-footer">
+                        <div class="cert-date">
+                            <span>颁发日期</span>
+                            <strong>2025年05月26日</strong>
+                        </div>
+                        <div class="cert-stamp">
+                            <span>真爱无限</span>
+                            <span>永结同心</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-cert-share" id="certShare">
+                <i class="fas fa-camera"></i> 截图保存证书
             </button>
-            
-            <div class="social-icons">
-                <a href="#" title="分享到微信" id="share-wechat">
-                    <i class="fab fa-weixin"></i>
-                </a>
-                <a href="#" title="分享到微博" id="share-weibo">
-                    <i class="fab fa-weibo"></i>
-                </a>
-                <a href="#" title="分享到QQ" id="share-qq">
-                    <i class="fab fa-qq"></i>
-                </a>
-                <a href="#" title="保存图片" id="save-invitation">
-                    <i class="fas fa-download"></i>
-                </a>
+        </div>
+    </section>
+
+    <!-- 下一个纪念日倒计时 -->
+    <section class="section next-anni-section" id="nextanni">
+        <h2 class="section-title glow-text">
+            <i class="fas fa-hourglass-half"></i> 下一个纪念日
+        </h2>
+        <div class="next-anni-card">
+            <div class="next-anni-icon" id="nextAnniIcon">
+                <i class="fas fa-heart"></i>
             </div>
-            
-            <div class="footer-text">
-                <p>感谢您的见证与祝福 ❤️</p>
-                <p>李文豪 & 叶霞 · 2026年订婚之喜</p>
-                <p style="margin-top: 10px; font-size: 14px;">
-                    <i class="fas fa-info-circle"></i> 如有任何疑问，可联系：XXX-XXXX-XXXX
-                </p>
+            <h3 class="next-anni-name" id="nextAnniName">--</h3>
+            <p class="next-anni-date" id="nextAnniDate">--</p>
+            <div class="next-anni-countdown">
+                <div class="nac-item">
+                    <span class="nac-num" id="nac-days">0</span>
+                    <span class="nac-label">天</span>
+                </div>
+                <div class="nac-item">
+                    <span class="nac-num" id="nac-hours">0</span>
+                    <span class="nac-label">时</span>
+                </div>
+                <div class="nac-item">
+                    <span class="nac-num" id="nac-mins">0</span>
+                    <span class="nac-label">分</span>
+                </div>
+                <div class="nac-item">
+                    <span class="nac-num" id="nac-secs">0</span>
+                    <span class="nac-label">秒</span>
+                </div>
+            </div>
+            <div class="anni-progress">
+                <div class="anni-progress-bar" id="anniProgressBar"></div>
+            </div>
+            <p class="anni-progress-text" id="anniProgressText">--</p>
+        </div>
+    </section>
+
+    <!-- 嘉宾留言板（GitHub 持久化） -->
+    <section class="section guestbook-section" id="guestbook">
+        <h2 class="section-title glow-text">
+            <i class="fas fa-comment-dots"></i> 嘉宾留言
+        </h2>
+        <p class="guestbook-desc">留下你的祝福，数据永久保存 ✨</p>
+
+        <div class="guestbook-form">
+            <div class="guestbook-input-row">
+                <input type="text" id="gbName" placeholder="你的姓名" maxlength="20">
+            </div>
+            <div class="guestbook-input-row">
+                <textarea id="gbMessage" placeholder="写下你的祝福..." rows="3" maxlength="200"></textarea>
+            </div>
+            <button class="btn-submit-gb" id="submitGb">
+                <i class="fas fa-paper-plane"></i> 发送祝福
+            </button>
+            <div class="gb-status" id="gbStatus"></div>
+        </div>
+
+        <div class="guestbook-list" id="gbList">
+            <div class="gb-loading" id="gbLoading">
+                <i class="fas fa-spinner fa-spin"></i> 加载留言中...
             </div>
         </div>
-        
-        <!-- 分享弹窗 -->
-        <div class="share-modal" id="share-modal">
-            <div class="modal-content">
-                <span class="close-modal" id="close-share-modal">&times;</span>
-                <h2 style="color: var(--primary-color); margin-bottom: 15px;">分享喜讯</h2>
-                <p style="margin-bottom: 25px; color: #666;">将这份喜悦分享给亲朋好友</p>
-                
-                <div class="share-options" style="display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; flex-wrap: wrap;">
-                    <div class="share-option" id="share-wechat-btn" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: all 0.3s ease; padding: 10px; border-radius: 12px;">
-                        <div class="share-icon wechat-icon" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 8px; background: #07C160; color: white; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);">
-                            <i class="fab fa-weixin"></i>
-                        </div>
-                        <span style="font-size: 14px;">微信</span>
-                    </div>
-                    
-                    <div class="share-option" id="share-weibo-btn" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: all 0.3s ease; padding: 10px; border-radius: 12px;">
-                        <div class="share-icon weibo-icon" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 8px; background: #E6162D; color: white; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);">
-                            <i class="fab fa-weibo"></i>
-                        </div>
-                        <span style="font-size: 14px;">微博</span>
-                    </div>
-                    
-                    <div class="share-option" id="share-qq-btn" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: all 0.3s ease; padding: 10px; border-radius: 12px;">
-                        <div class="share-icon qq-icon" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 8px; background: #12B7F5; color: white; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);">
-                            <i class="fab fa-qq"></i>
-                        </div>
-                        <span style="font-size: 14px;">QQ</span>
-                    </div>
-                </div>
-                
-                <div style="display: flex; margin-bottom: 15px;">
-                    <input type="text" id="page-url" class="form-input" value="加载中..." readonly style="border-radius: 10px 0 0 10px; border-right: none;">
-                    <button id="copy-url" style="background: var(--primary-color); color: white; border: none; padding: 0 20px; border-radius: 0 10px 10px 0; cursor: pointer;">复制</button>
-                </div>
-                
-                <div class="copy-success" id="copy-success" style="color: #07C160; font-size: 16px; margin-top: 5px; display: none;">
-                    <i class="fas fa-check-circle"></i> 链接已复制到剪贴板！
-                </div>
-            </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="site-footer">
+        <div class="footer-hearts">
+            <span>💖</span><span>💖</span><span>💖</span>
+        </div>
+        <p>李文豪 & 叶霞 · 属于我们的星空</p>
+        <p class="footer-sub">愿我们的爱情如星光般永恒闪耀</p>
+    </footer>
+
+    <!-- 天气联动 -->
+    <div class="weather-widget" id="weatherWidget">
+        <div class="weather-icon" id="weatherIcon"><i class="fas fa-cloud"></i></div>
+        <div class="weather-info">
+            <span id="weatherTemp">--°</span>
+            <span id="weatherDesc">加载中</span>
         </div>
     </div>
 
-    <!-- 加载动画 -->
-    <div class="loader-container" id="loader">
-        <div class="loader"></div>
-        <p style="margin-top: 20px; color: var(--primary-color); font-size: 18px;">加载幸福中...</p>
+    <!-- 纪念日彩蛋弹窗 -->
+    <div class="easter-egg-modal" id="easterEggModal">
+        <div class="easter-egg-content">
+            <div class="easter-egg-hearts">💕💕💕</div>
+            <h2 id="easterEggTitle">特别的日子</h2>
+            <p id="easterEggText">今天是属于我们的纪念日！</p>
+            <button class="easter-egg-close" id="easterEggClose">我知道了 ❤️</button>
+        </div>
     </div>
 
-    <script src="script.js"></script> <!-- 引入外部JS -->
+    <!-- 背景音乐控制 -->
+    <div class="music-toggle" id="musicToggle">
+        <i class="fas fa-music"></i>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
