@@ -424,6 +424,12 @@
                 <p class="anni-count" id="anni-his-birthday"></p>
             </div>
             <div class="anniversary-card">
+                <div class="anni-icon"><i class="fas fa-gift"></i></div>
+                <h3>霞霞的生日</h3>
+                <p class="anni-date">10.23</p>
+                <p class="anni-count" id="anni-her-birthday"></p>
+            </div>
+            <div class="anniversary-card">
                 <div class="anni-icon"><i class="fas fa-star"></i></div>
                 <h3>初次相遇</h3>
                 <p class="anni-date">高中时期</p>
@@ -821,6 +827,64 @@
             <div class="quiz-result" id="quizResult" style="display:none;"></div>
             <button class="btn-quiz" id="btnQuizNext" style="display:none;">下一题 →</button>
             <button class="btn-quiz" id="btnQuizStart"><i class="fas fa-play"></i> 开始答题</button>
+        </div>
+    </section>
+
+    <!-- 实用工具 -->
+    <section class="section tools-section" id="tools">
+        <h2 class="section-title glow-text"><i class="fas fa-toolbox"></i> 日常工具箱</h2>
+        <p class="section-desc">我们一起用的日常小工具</p>
+        <div class="tools-grid">
+            <!-- 共享待办 -->
+            <div class="tool-card">
+                <h4><i class="fas fa-check-circle"></i> 共享待办</h4>
+                <div class="todo-input">
+                    <input type="text" id="todoInput" placeholder="添加待办事项..." maxlength="50">
+                    <button id="todoAdd"><i class="fas fa-plus"></i></button>
+                </div>
+                <ul class="todo-list" id="todoList"></ul>
+            </div>
+            <!-- 日常打卡 -->
+            <div class="tool-card">
+                <h4><i class="fas fa-calendar-check"></i> 日常打卡</h4>
+                <div class="checkin-streak" id="checkinStreak">连续打卡: 0 天</div>
+                <button class="btn-checkin" id="btnCheckin"><i class="fas fa-hand-point-up"></i> 打卡</button>
+                <div class="checkin-grid" id="checkinGrid"></div>
+            </div>
+            <!-- 备忘录 -->
+            <div class="tool-card">
+                <h4><i class="fas fa-sticky-note"></i> 备忘录</h4>
+                <textarea id="memoArea" placeholder="写点什么..." maxlength="500"></textarea>
+                <div class="memo-status" id="memoStatus">自动保存</div>
+            </div>
+            <!-- 喝水提醒 -->
+            <div class="tool-card">
+                <h4><i class="fas fa-tint"></i> 喝水提醒</h4>
+                <div class="water-counter">
+                    <span class="water-cups" id="waterCups">0</span>
+                    <span class="water-label">/ 8 杯</span>
+                </div>
+                <div class="water-progress">
+                    <div class="water-fill" id="waterFill"></div>
+                </div>
+                <div class="water-btns">
+                    <button class="btn-water" id="btnWaterAdd"><i class="fas fa-plus"></i> 喝了一杯</button>
+                    <button class="btn-water btn-water-reset" id="btnWaterReset"><i class="fas fa-redo"></i></button>
+                </div>
+                <div class="water-timer" id="waterTimer">提醒间隔: 30分钟</div>
+            </div>
+            <!-- 心情记录 -->
+            <div class="tool-card">
+                <h4><i class="fas fa-smile"></i> 今天心情</h4>
+                <div class="mood-picker" id="moodPicker">
+                    <span class="mood-emoji" data-mood="great" title="超开心">😄</span>
+                    <span class="mood-emoji" data-mood="good" title="开心">😊</span>
+                    <span class="mood-emoji" data-mood="ok" title="一般">😐</span>
+                    <span class="mood-emoji" data-mood="bad" title="不开心">😢</span>
+                    <span class="mood-emoji" data-mood="angry" title="生气">😡</span>
+                </div>
+                <div class="mood-history" id="moodHistory"></div>
+            </div>
         </div>
     </section>
 

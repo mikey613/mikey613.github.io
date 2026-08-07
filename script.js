@@ -279,6 +279,14 @@ const isLowEnd = isMobile || navigator.hardwareConcurrency <= 4;
     }
     const bdayDiff = Math.ceil((nextBirthday - now) / (1000 * 60 * 60 * 24));
     document.getElementById('anni-his-birthday').textContent = '距离下次生日还有 ' + bdayDiff + ' 天';
+
+    // 霞霞的生日倒计时
+    let nextHerBirthday = new Date(thisYear + '-10-23');
+    if (nextHerBirthday <= now) {
+        nextHerBirthday = new Date((thisYear + 1) + '-10-23');
+    }
+    const herBdayDiff = Math.ceil((nextHerBirthday - now) / (1000 * 60 * 60 * 24));
+    document.getElementById('anni-her-birthday').textContent = '距离下次生日还有 ' + herBdayDiff + ' 天';
 })();
 
 /* ========== 心愿墙 ========== */
@@ -625,6 +633,7 @@ window.addEventListener('load', () => {
         '1-25': { title: '订婚纪念日 💍', text: '2026年1月25日，我们在亲友见证下许下了一生的承诺。' },
         '2-14': { title: '领证纪念日 💒', text: '2026年2月14日，情人节，我们领了结婚证！从此不仅是恋人，更是家人。' },
         '6-13': { title: '他的生日 🎂', text: '今天是文豪的生日！祝他生日快乐，也祝我们永远幸福！' },
+        '10-23': { title: '霞霞的生日 🎂', text: '今天是霞霞的生日！祝我的宝贝生日快乐，永远年轻漂亮！' },
         '3-31': { title: '缘分日 ✨', text: '2025年3月31日，一个步数76的点赞，开启了我们的故事。' }
     };
 
@@ -943,6 +952,7 @@ window.addEventListener('load', () => {
     const anniversaries = [
         { md: '05-26', name: '在一起纪念日', icon: 'fa-heart' },
         { md: '06-13', name: '他的生日', icon: 'fa-birthday-cake' },
+        { md: '10-23', name: '霞霞的生日 🎂', icon: 'fa-gift' },
         { md: '01-25', name: '订婚纪念日', icon: 'fa-ring' },
         { md: '02-14', name: '领证纪念日 💒', icon: 'fa-heart' },
         { md: '03-31', name: '缘分日', icon: 'fa-star' }
@@ -1668,4 +1678,291 @@ window.addEventListener('load', () => {
         startBtn.style.display = 'block';
         startBtn.innerHTML = '<i class="fas fa-redo"></i> 重新答题';
     }
+})();
+
+/* ========== 共享待办 ========== */
+(function initTodo() {
+    const input = document.getElementById('todoInput');
+    const addBtn = document.getElementById('todoAdd');
+    const list = document.getElementById('todoList');
+    const KEY = 'love-todos';
+
+    function getTodos() {
+        return JSON.parse(localStorage.getItem(KEY) || '[]');
+    }
+
+    function save(todos) {
+        localStorage.setItem(KEY, JSON.stringify(todos));
+    }
+
+    function render() {
+        const todos = getTodos();
+        list.innerHTML = '';
+        todos.forEach((t, i) => {
+            const li = document.createElement('li');
+            li.className = t.done ? 'done' : '';
+            li.innerHTML =
+                '<span class="todo-check" data-i="' + i + '">✓</span>' +
+                '<span>' + t.text + '</span>' +
+                '<span class="todo-del" data-i="' + i + '"><i class="fas fa-times"></i></span>';
+            list.appendChild(li);
+        });
+    }
+
+    addBtn.addEventListener('click', () => {
+        const text = input.value.trim();
+        if (!text) return;
+        const todos = getTodos();
+        todos.push({ text: text, done: false });
+        save(todos);
+        input.value = '';
+        render();
+    });
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addBtn.click();
+    });
+
+    list.addEventListener('click', (e) => {
+        const check = e.target.closest('.todo-check');
+        const del = e.target.closest('.todo-del');
+        const todos = getTodos();
+        if (check) {
+            const i = parseInt(check.dataset.i);
+            todos[i].done = !todos[i].done;
+            save(todos);
+            render();
+        }
+        if (del) {
+            const i = parseInt(del.dataset.i);
+            todos.splice(i, 1);
+            save(todos);
+            render();
+        }
+    });
+
+    render();
+})();
+
+/* ========== 日常打卡 ========== */
+(function initCheckin() {
+    const btn = document.getElementById('btnCheckin');
+    const streakEl = document.getElementById('checkinStreak');
+    const grid = document.getElementById('checkinGrid');
+    const KEY = 'love-checkin';
+
+    function getData() {
+        return JSON.parse(localStorage.getItem(KEY) || '{"dates":[]}');
+    }
+
+    function save(data) {
+        localStorage.setItem(KEY, JSON.stringify(data));
+    }
+
+    function getStreak() {
+        const data = getData();
+        const dates = data.dates.sort();
+        if (dates.length === 0) return 0;
+        let streak = 0;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const checkDate = new Date(today);
+
+        for (let i = dates.length - 1; i >= 0; i--) {
+            const d = new Date(dates[i]);
+            d.setHours(0, 0, 0, 0);
+            if (d.getTime() === checkDate.getTime()) {
+                streak++;
+                checkDate.setDate(checkDate.getDate() - 1);
+            } else if (d.getTime() < checkDate.getTime()) {
+                break;
+            }
+        }
+        return streak;
+    }
+
+    function renderGrid() {
+        const data = getData();
+        const today = new Date();
+        grid.innerHTML = '';
+        // 显示最近 28 天
+        for (let i = 27; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+            const ds = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            const checked = data.dates.includes(ds);
+            const isToday = i === 0;
+            const div = document.createElement('div');
+            div.className = 'checkin-day' + (checked ? ' checked' : '') + (isToday ? ' today' : '');
+            div.textContent = d.getDate();
+            div.title = ds;
+            grid.appendChild(div);
+        }
+    }
+
+    btn.addEventListener('click', () => {
+        const today = new Date();
+        const ds = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+        const data = getData();
+        if (data.dates.includes(ds)) {
+            btn.textContent = '今天已经打过卡啦 ✓';
+            btn.disabled = true;
+            return;
+        }
+        data.dates.push(ds);
+        save(data);
+        streakEl.textContent = '连续打卡: ' + getStreak() + ' 天';
+        btn.textContent = '已打卡 ✓';
+        btn.disabled = true;
+        renderGrid();
+    });
+
+    // 检查今天是否已打卡
+    const today = new Date();
+    const ds = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    const data = getData();
+    if (data.dates.includes(ds)) {
+        btn.textContent = '已打卡 ✓';
+        btn.disabled = true;
+    }
+    streakEl.textContent = '连续打卡: ' + getStreak() + ' 天';
+    renderGrid();
+})();
+
+/* ========== 备忘录 ========== */
+(function initMemo() {
+    const area = document.getElementById('memoArea');
+    const status = document.getElementById('memoStatus');
+    const KEY = 'love-memo';
+
+    area.value = localStorage.getItem(KEY) || '';
+
+    let saveTimer;
+    area.addEventListener('input', () => {
+        status.textContent = '保存中...';
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+            localStorage.setItem(KEY, area.value);
+            status.textContent = '已自动保存 ✓';
+        }, 500);
+    });
+})();
+
+/* ========== 喝水提醒 ========== */
+(function initWater() {
+    const cupsEl = document.getElementById('waterCups');
+    const fillEl = document.getElementById('waterFill');
+    const addBtn = document.getElementById('btnWaterAdd');
+    const resetBtn = document.getElementById('btnWaterReset');
+    const timerEl = document.getElementById('waterTimer');
+    const KEY = 'love-water';
+
+    function getData() {
+        const d = JSON.parse(localStorage.getItem(KEY) || '{"cups":0,"date":""}');
+        const today = new Date().toDateString();
+        if (d.date !== today) {
+            d.cups = 0;
+            d.date = today;
+        }
+        return d;
+    }
+
+    function save(data) {
+        localStorage.setItem(KEY, JSON.stringify(data));
+    }
+
+    function render() {
+        const data = getData();
+        cupsEl.textContent = data.cups;
+        fillEl.style.width = Math.min(data.cups / 8 * 100, 100) + '%';
+    }
+
+    addBtn.addEventListener('click', () => {
+        const data = getData();
+        if (data.cups < 20) data.cups++;
+        save(data);
+        render();
+    });
+
+    resetBtn.addEventListener('click', () => {
+        const data = getData();
+        data.cups = 0;
+        save(data);
+        render();
+    });
+
+    // 喝水提醒（每30分钟）
+    setInterval(() => {
+        const data = getData();
+        if (data.cups < 8) {
+            timerEl.textContent = '💧 记得喝水！今天已喝 ' + data.cups + ' 杯';
+            timerEl.style.color = '#48dbfb';
+            setTimeout(() => {
+                timerEl.style.color = '';
+                timerEl.textContent = '提醒间隔: 30分钟';
+            }, 5000);
+        }
+    }, 30 * 60 * 1000);
+
+    render();
+})();
+
+/* ========== 心情记录 ========== */
+(function initMood() {
+    const picker = document.getElementById('moodPicker');
+    const history = document.getElementById('moodHistory');
+    const KEY = 'love-moods';
+
+    function getData() {
+        return JSON.parse(localStorage.getItem(KEY) || '{}');
+    }
+
+    function save(data) {
+        localStorage.setItem(KEY, JSON.stringify(data));
+    }
+
+    function renderHistory() {
+        const data = getData();
+        const today = new Date();
+        history.innerHTML = '';
+        // 显示最近 14 天
+        for (let i = 13; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+            const ds = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            const mood = data[ds];
+            const div = document.createElement('div');
+            div.className = 'mood-dot';
+            div.textContent = mood || '';
+            div.title = ds + (mood ? ': ' + mood : '');
+            history.appendChild(div);
+        }
+    }
+
+    picker.addEventListener('click', (e) => {
+        const emoji = e.target.closest('.mood-emoji');
+        if (!emoji) return;
+        const mood = emoji.dataset.mood;
+        const today = new Date();
+        const ds = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+        const data = getData();
+        data[ds] = emoji.textContent;
+        save(data);
+
+        picker.querySelectorAll('.mood-emoji').forEach(e => e.classList.remove('selected'));
+        emoji.classList.add('selected');
+        renderHistory();
+    });
+
+    // 检查今天是否已选心情
+    const today = new Date();
+    const ds = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    const data = getData();
+    if (data[ds]) {
+        picker.querySelectorAll('.mood-emoji').forEach(e => {
+            if (e.textContent === data[ds]) e.classList.add('selected');
+        });
+    }
+
+    renderHistory();
 })();
