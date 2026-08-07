@@ -36,6 +36,9 @@ body {
     color: var(--text-primary);
     overflow-x: hidden;
     line-height: 1.7;
+    touch-action: pan-x pan-y;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 /* 性能优化：GPU加速 */
@@ -47,6 +50,12 @@ body {
 .glow-ring {
     will-change: transform, opacity;
     transform: translateZ(0);
+}
+
+/* 输入框允许选中文字 */
+input, textarea, [contenteditable] {
+    -webkit-user-select: auto;
+    user-select: auto;
 }
 
 /* ========== 星空画布 ========== */
@@ -2554,14 +2563,14 @@ body.season-winter { --accent: #a0c0f0; --accent-light: #b5d0f5; --accent-glow: 
     .map-board { height: 300px; }
     .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
     .qr-widget { bottom: 15px; left: 15px; }
-    .help-widget { bottom: 85px; }
+    .help-widget { bottom: 75px; right: 15px; }
     .help-panel { width: 90vw; max-height: 70vh; }
 }
 
 /* ========== 帮助引导 ========== */
 .help-widget {
     position: fixed;
-    bottom: 30px;
+    bottom: 90px;
     right: 30px;
     z-index: 999;
 }

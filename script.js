@@ -483,14 +483,21 @@ const AppUser = (function() {
 /* ========== 音乐按钮（占位） ========== */
 (function initMusic() {
     const btn = document.getElementById('musicToggle');
+    const audio = document.getElementById('bgm');
+    audio.volume = 0.4;
     let playing = false;
 
     btn.addEventListener('click', () => {
         playing = !playing;
         btn.classList.toggle('playing', playing);
-        // 可在此处添加实际音频播放逻辑
-        // const audio = new Audio('bgm.mp3');
-        // playing ? audio.play() : audio.pause();
+        if (playing) {
+            audio.play().catch(() => {
+                playing = false;
+                btn.classList.remove('playing');
+            });
+        } else {
+            audio.pause();
+        }
     });
 })();
 
