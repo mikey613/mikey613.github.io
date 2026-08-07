@@ -194,6 +194,7 @@ body {
 
 .hero-content {
     position: relative;
+    contain: layout style;
 }
 
 .glow-ring {
@@ -207,6 +208,8 @@ body {
     background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
     animation: pulseGlow 4s ease-in-out infinite;
     pointer-events: none;
+    contain: strict;
+    isolation: isolate;
 }
 
 @keyframes pulseGlow {
