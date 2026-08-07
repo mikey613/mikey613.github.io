@@ -6,6 +6,7 @@
     <title>李文豪 & 叶霞 | 属于我们的星空</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
@@ -30,6 +31,10 @@
             <a href="#nextanni" class="nav-link">倒计时</a>
             <a href="#wishes" class="nav-link">心愿</a>
             <a href="#guestbook" class="nav-link">留言</a>
+            <a href="#scratchcard" class="nav-link">彩蛋</a>
+            <a href="#dashboard" class="nav-link">数据</a>
+            <a href="#lovemap" class="nav-link">地图</a>
+            <a href="#diary" class="nav-link">日记</a>
         </div>
         <button class="theme-toggle" id="themeToggle" title="切换白天/夜晚模式">
             <i class="fas fa-sun"></i>
@@ -604,6 +609,148 @@
             </div>
         </div>
     </section>
+
+    <!-- 刮刮卡彩蛋 -->
+    <section class="section scratch-section" id="scratchcard">
+        <h2 class="section-title glow-text"><i class="fas fa-gift"></i> 神秘彩蛋</h2>
+        <p class="section-desc">刮开卡片，发现隐藏的秘密</p>
+        <div class="scratch-grid">
+            <div class="scratch-card-wrap">
+                <div class="scratch-card" id="scratchCard1">
+                    <canvas width="250" height="160"></canvas>
+                    <div class="scratch-hidden">
+                        <span>💍</span>
+                        <p>下一站：婚礼</p>
+                    </div>
+                </div>
+                <p class="scratch-label">刮开看看</p>
+            </div>
+            <div class="scratch-card-wrap">
+                <div class="scratch-card" id="scratchCard2">
+                    <canvas width="250" height="160"></canvas>
+                    <div class="scratch-hidden">
+                        <span>👶</span>
+                        <p>未来可期</p>
+                    </div>
+                </div>
+                <p class="scratch-label">再刮一个</p>
+            </div>
+            <div class="scratch-card-wrap">
+                <div class="scratch-card" id="scratchCard3">
+                    <canvas width="250" height="160"></canvas>
+                    <div class="scratch-hidden">
+                        <span>🌍</span>
+                        <p>环游世界</p>
+                    </div>
+                </div>
+                <p class="scratch-label">最后一个</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 关系等级系统 -->
+    <section class="section level-section" id="level">
+        <h2 class="section-title glow-text"><i class="fas fa-trophy"></i> 恋爱等级</h2>
+        <div class="level-card">
+            <div class="level-badge" id="levelBadge">
+                <span class="level-icon" id="levelIcon">💕</span>
+                <h3 id="levelTitle">--</h3>
+                <p class="level-desc" id="levelDesc">--</p>
+            </div>
+            <div class="level-progress">
+                <div class="level-bar">
+                    <div class="level-fill" id="levelFill"></div>
+                </div>
+                <p class="level-exp" id="levelExp">--</p>
+            </div>
+            <div class="level-list" id="levelList"></div>
+        </div>
+    </section>
+
+    <!-- 数据仪表盘 -->
+    <section class="section dashboard-section" id="dashboard">
+        <h2 class="section-title glow-text"><i class="fas fa-chart-bar"></i> 恋爱数据站</h2>
+        <div class="dashboard-grid" id="dashGrid"></div>
+    </section>
+
+    <!-- 恋爱地图 -->
+    <section class="section map-section" id="lovemap">
+        <h2 class="section-title glow-text"><i class="fas fa-map-marked-alt"></i> 恋爱地图</h2>
+        <p class="section-desc">我们故事发生的每一个地方</p>
+        <div class="map-board" id="mapBoard">
+            <div class="map-point" style="top:30%;left:25%" data-label="高中相遇">
+                <div class="map-dot"></div><span>高中相遇</span>
+            </div>
+            <div class="map-point" style="top:45%;left:40%" data-label="大学时光">
+                <div class="map-dot"></div><span>大学时光</span>
+            </div>
+            <div class="map-point" style="top:55%;left:55%" data-label="新余体育馆">
+                <div class="map-dot"></div><span>新余体育馆</span>
+            </div>
+            <div class="map-point" style="top:35%;left:65%" data-label="武功山">
+                <div class="map-dot"></div><span>武功山</span>
+            </div>
+            <div class="map-point" style="top:65%;left:35%" data-label="暨阳宴仙湖">
+                <div class="map-dot"></div><span>暨阳宴仙湖</span>
+            </div>
+            <div class="map-point" style="top:20%;left:75%" data-label="领证之地">
+                <div class="map-dot gold"></div><span>领证之地</span>
+            </div>
+            <svg class="map-lines" id="mapLines"></svg>
+        </div>
+    </section>
+
+    <!-- 共同日记 -->
+    <section class="section diary-section" id="diary">
+        <h2 class="section-title glow-text"><i class="fas fa-book-open"></i> 我们的日记</h2>
+        <div class="diary-calendar" id="diaryCalendar"></div>
+        <div class="diary-add">
+            <input type="date" id="diaryDate">
+            <input type="text" id="diaryText" placeholder="今天发生了一件小事..." maxlength="100">
+            <button id="diarySubmit"><i class="fas fa-pen"></i></button>
+        </div>
+    </section>
+
+    <!-- 照片对比滑块 -->
+    <section class="section slider-section" id="photoslider">
+        <h2 class="section-title glow-text"><i class="fas fa-columns"></i> 时光对比</h2>
+        <p class="section-desc">拖动滑块，看看时间的变化</p>
+        <div class="compare-slider" id="compareSlider">
+            <img src="1.jpg" class="compare-before" alt="before">
+            <img src="2.jpg" class="compare-after" alt="after">
+            <div class="compare-handle" id="compareHandle">
+                <i class="fas fa-arrows-alt-h"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- 词云 -->
+    <section class="section wordcloud-section" id="wordcloud">
+        <h2 class="section-title glow-text"><i class="fas fa-cloud"></i> 爱的词云</h2>
+        <p class="section-desc">我们故事里的关键词</p>
+        <div class="wordcloud-canvas" id="wordcloudCanvas"></div>
+    </section>
+
+    <!-- 爱情大富翁 -->
+    <section class="section boardgame-section" id="boardgame">
+        <h2 class="section-title glow-text"><i class="fas fa-dice"></i> 爱情大富翁</h2>
+        <p class="section-desc">点击般子，走过我们的故事</p>
+        <div class="board-controls">
+            <button class="btn-dice" id="btnDice"><i class="fas fa-dice"></i> 掷般子</button>
+            <span class="dice-result" id="diceResult">--</span>
+        </div>
+        <div class="board-track" id="boardTrack"></div>
+        <div class="board-event" id="boardEvent">点击般子开始游戏！</div>
+    </section>
+
+    <!-- 二维码分享 -->
+    <div class="qr-widget" id="qrWidget">
+        <div class="qr-toggle" id="qrToggle"><i class="fas fa-qrcode"></i></div>
+        <div class="qr-popup" id="qrPopup">
+            <canvas id="qrCanvas" width="150" height="150"></canvas>
+            <p>扫码访问网站</p>
+        </div>
+    </div>
 
     <!-- 页脚 -->
     <footer class="site-footer">

@@ -1024,3 +1024,393 @@ window.addEventListener('load', () => {
 
     sections.forEach(sec => observer.observe(sec));
 })();
+
+/* ========== 刮刮卡 ========== */
+(function initScratchCards() {
+    document.querySelectorAll('.scratch-card').forEach(card => {
+        const canvas = card.querySelector('canvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+
+        // 填充银色涂层
+        ctx.fillStyle = '#c0c0c0';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#a0a0a0';
+        ctx.font = '16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('刮开我 ✨', canvas.width / 2, canvas.height / 2);
+
+        ctx.globalCompositeOperation = 'destination-out';
+
+        function scratch(e) {
+            if (!isDrawing) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX || e.touches[0].clientX) - rect.left;
+            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            ctx.beginPath();
+            ctx.arc(x * scaleX, y * scaleY, 20, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        card.addEventListener('mousedown', () => { isDrawing = true; });
+        card.addEventListener('mousemove', scratch);
+        card.addEventListener('mouseup', () => isDrawing = false);
+        card.addEventListener('touchstart', (e) => { isDrawing = true; e.preventDefault(); });
+        card.addEventListener('touchmove', scratch);
+        card.addEventListener('touchend', () => isDrawing = false);
+    });
+})();
+
+/* ========== 恋爱等级系统 ========== */
+(function initLevelSystem() {
+    const levels = [
+        { days: 0, icon: '💗', title: '甜蜜新手', desc: '刚刚在一起，一切都是新的' },
+        { days: 30, icon: '💕', title: '恋爱学员', desc: '一个月了，开始习愤彼此' },
+        { days: 100, icon: '💖', title: '心动达人', desc: '100天，心动依然' },
+        { days: 200, icon: '💘', title: '甜蜜高手', desc: '200天，甜蜜已成日常' },
+        { days: 365, icon: '💝', title: '爱情大师', desc: '一年！风雨同舟' },
+        { days: 500, icon: '💎', title: '钻石恋人', desc: '500天，感情如钻石般坚硬' },
+        { days: 730, icon: '👑', title: '真爱之王', desc: '两年！真正的王者' },
+        { days: 1000, icon: '🌟', title: '传奇情侣', desc: '1000天！传奇般的爱情' },
+        { days: 3650, icon: '💫', title: '永恒之爱', desc: '10年！永恒不变' }
+    ];
+
+    const startDate = new Date('2025-05-26');
+    const days = Math.floor((new Date() - startDate) / 86400000);
+
+    let currentLevel = levels[0];
+    let nextLevel = levels[1];
+    for (let i = levels.length - 1; i >= 0; i--) {
+        if (days >= levels[i].days) {
+            currentLevel = levels[i];
+            nextLevel = levels[i + 1] || null;
+            break;
+        }
+    }
+
+    document.getElementById('levelIcon').textContent = currentLevel.icon;
+    document.getElementById('levelTitle').textContent = currentLevel.title;
+    document.getElementById('levelDesc').textContent = currentLevel.desc;
+
+    if (nextLevel) {
+        const progress = ((days - currentLevel.days) / (nextLevel.days - currentLevel.days)) * 100;
+        document.getElementById('levelFill').style.width = progress.toFixed(1) + '%';
+        document.getElementById('levelExp').textContent =
+            days + ' / ' + nextLevel.days + ' 天（距下一级还差 ' + (nextLevel.days - days) + ' 天）';
+    } else {
+        document.getElementById('levelFill').style.width = '100%';
+        document.getElementById('levelExp').textContent = '已满级！ ' + days + ' 天';
+    }
+
+    let html = '';
+    levels.forEach(l => {
+        const cls = days >= l.days ? 'active' : 'locked';
+        html += '<span class="level-tag ' + cls + '">' + l.icon + ' ' + l.title + ' (' + l.days + '天)</span>';
+    });
+    document.getElementById('levelList').innerHTML = html;
+})();
+
+/* ========== 数据仪表盘 ========== */
+(function initDashboard() {
+    const startDate = new Date('2025-05-26');
+    const now = new Date();
+    const days = Math.floor((now - startDate) / 86400000);
+    const hours = Math.floor((now - startDate) / 3600000);
+    const heartbeats = days * 100000; // 约每天10万次心跳
+
+    const stats = [
+        { icon: '📅', value: days, label: '在一起天数' },
+        { icon: '⏰', value: hours.toLocaleString(), label: '在一起小时' },
+        { icon: '💓', value: heartbeats.toLocaleString(), label: '为你心跳次数' },
+        { icon: '🌅', value: days, label: '一起看的日出' },
+        { icon: '🌙', value: days, label: '说过的晚安' },
+        { icon: '🍽️', value: Math.floor(days * 2.5), label: '一起吃过的饭' },
+        { icon: '😄', value: Math.floor(days * 15), label: '一起笑的次数' },
+        { icon: '💌', value: '∞', label: '想你的次数' }
+    ];
+
+    let html = '';
+    stats.forEach(s => {
+        html += '<div class="dash-card">' +
+            '<div class="dash-icon">' + s.icon + '</div>' +
+            '<div class="dash-value">' + s.value + '</div>' +
+            '<div class="dash-label">' + s.label + '</div>' +
+        '</div>';
+    });
+    document.getElementById('dashGrid').innerHTML = html;
+})();
+
+/* ========== 恋爱地图连线 ========== */
+(function initMapLines() {
+    const svg = document.getElementById('mapLines');
+    if (!svg) return;
+    const points = document.querySelectorAll('.map-point');
+    const board = document.getElementById('mapBoard');
+    const rect = board.getBoundingClientRect();
+
+    function drawLines() {
+        svg.innerHTML = '';
+        const boardRect = board.getBoundingClientRect();
+        for (let i = 0; i < points.length - 1; i++) {
+            const a = points[i].getBoundingClientRect();
+            const b = points[i + 1].getBoundingClientRect();
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', a.left - boardRect.left + a.width / 2);
+            line.setAttribute('y1', a.top - boardRect.top + a.height / 2);
+            line.setAttribute('x2', b.left - boardRect.left + b.width / 2);
+            line.setAttribute('y2', b.top - boardRect.top + b.height / 2);
+            svg.appendChild(line);
+        }
+    }
+
+    setTimeout(drawLines, 500);
+    window.addEventListener('resize', drawLines);
+})();
+
+/* ========== 共同日记 ========== */
+(function initDiary() {
+    const calendar = document.getElementById('diaryCalendar');
+    const dateInput = document.getElementById('diaryDate');
+    const textInput = document.getElementById('diaryText');
+    const submitBtn = document.getElementById('diarySubmit');
+    const STORAGE_KEY = 'love-diary';
+
+    function getDiary() {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    }
+
+    function renderCalendar() {
+        const diary = getDiary();
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const today = now.getDate();
+
+        let html = '';
+        // 周标题
+        ['日', '一', '二', '三', '四', '五', '六'].forEach(d => {
+            html += '<div class="diary-day" style="font-weight:600;color:var(--accent-light);font-size:0.7rem;">' + d + '</div>';
+        });
+        // 空白填充
+        for (let i = 0; i < firstDay; i++) {
+            html += '<div class="diary-day"></div>';
+        }
+        // 日期
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+            const hasEntry = diary[dateStr] ? 'has-entry' : '';
+            const isToday = d === today ? 'today' : '';
+            html += '<div class="diary-day ' + hasEntry + ' ' + isToday + '" title="' + (diary[dateStr] || '') + '">' + d + '</div>';
+        }
+        calendar.innerHTML = html;
+    }
+
+    submitBtn.addEventListener('click', () => {
+        const date = dateInput.value;
+        const text = textInput.value.trim();
+        if (!date || !text) return;
+        const diary = getDiary();
+        diary[date] = text;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(diary));
+        textInput.value = '';
+        renderCalendar();
+    });
+
+    // 默认今天
+    const now = new Date();
+    dateInput.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+
+    renderCalendar();
+})();
+
+/* ========== 照片对比滑块 ========== */
+(function initCompareSlider() {
+    const slider = document.getElementById('compareSlider');
+    const handle = document.getElementById('compareHandle');
+    const afterImg = slider.querySelector('.compare-after');
+    if (!slider || !handle) return;
+
+    let isDragging = false;
+
+    function updatePosition(x) {
+        const rect = slider.getBoundingClientRect();
+        let pos = (x - rect.left) / rect.width;
+        pos = Math.max(0, Math.min(1, pos));
+        handle.style.left = (pos * 100) + '%';
+        afterImg.style.clipPath = 'inset(0 ' + ((1 - pos) * 100) + '% 0 0)';
+    }
+
+    slider.addEventListener('mousedown', (e) => { isDragging = true; updatePosition(e.clientX); });
+    document.addEventListener('mousemove', (e) => { if (isDragging) updatePosition(e.clientX); });
+    document.addEventListener('mouseup', () => isDragging = false);
+    slider.addEventListener('touchstart', (e) => { isDragging = true; updatePosition(e.touches[0].clientX); });
+    document.addEventListener('touchmove', (e) => { if (isDragging) updatePosition(e.touches[0].clientX); });
+    document.addEventListener('touchend', () => isDragging = false);
+})();
+
+/* ========== 词云 ========== */
+(function initWordCloud() {
+    const container = document.getElementById('wordcloudCanvas');
+    if (!container) return;
+
+    const words = [
+        { text: '爱情', size: 2.5, color: '#ff6b9d' },
+        { text: '永远', size: 2.2, color: '#a78bfa' },
+        { text: '幸福', size: 2, color: '#f5c842' },
+        { text: '陪伴', size: 1.8, color: '#ff6b9d' },
+        { text: '缘分', size: 1.7, color: '#7c6ef0' },
+        { text: '心动', size: 1.6, color: '#ff9ff3' },
+        { text: '温暖', size: 1.5, color: '#f5c842' },
+        { text: '牵手', size: 1.4, color: '#a78bfa' },
+        { text: '未来', size: 1.8, color: '#48dbfb' },
+        { text: '家', size: 2, color: '#ff6b9d' },
+        { text: '相信', size: 1.3, color: '#7c6ef0' },
+        { text: '守护', size: 1.5, color: '#ff9ff3' },
+        { text: '约定', size: 1.4, color: '#f5c842' },
+        { text: '浪漫', size: 1.3, color: '#a78bfa' },
+        { text: '笑容', size: 1.2, color: '#48dbfb' },
+        { text: '星空', size: 1.6, color: '#7c6ef0' },
+        { text: '一生', size: 1.9, color: '#ff6b9d' },
+        { text: '新余', size: 1.1, color: '#f5c842' },
+        { text: '武功山', size: 1.2, color: '#a78bfa' },
+        { text: '番茄炒蛋', size: 1, color: '#ff9ff3' },
+        { text: '步数76', size: 1.1, color: '#48dbfb' },
+        { text: '情人节', size: 1.3, color: '#ff6b9d' },
+        { text: '结婚证', size: 1.5, color: '#f5c842' },
+        { text: '余生', size: 1.7, color: '#7c6ef0' }
+    ];
+
+    words.forEach(w => {
+        const span = document.createElement('span');
+        span.className = 'cloud-word';
+        span.textContent = w.text;
+        span.style.fontSize = w.size + 'rem';
+        span.style.color = w.color;
+        span.style.fontWeight = w.size > 1.5 ? '700' : '400';
+        container.appendChild(span);
+    });
+})();
+
+/* ========== 爱情大富翁 ========== */
+(function initBoardGame() {
+    const cells = [
+        { icon: '🏠', name: '起点', event: '故事从这里开始！' },
+        { icon: '🏫', name: '高中', event: '回忆涌上心头，你们在这里相遇' },
+        { icon: '💓', name: '心动', event: '心跳加速！想起第一次见面的感觉' },
+        { icon: '🎓', name: '大学', event: '那些年一起走过的校园' },
+        { icon: '🍳', name: '做饭', event: '番茄炒蛋的味道，是爱的味道' },
+        { icon: '👍', name: '点赞', event: '步数76！一切的缘起' },
+        { icon: '🚶', name: '散步', event: '新余体育馆，聊到天黑' },
+        { icon: '⛰️', name: '武功山', event: '你说你行，我也行！' },
+        { icon: '💐', name: '告白', event: '“小妞，做我女朋友” ——最勇敢的一天' },
+        { icon: '🌧️', name: '下雨', event: '爬了个寂寞，但和你逛商场也很开心' },
+        { icon: '🎂', name: '生日', event: '北京烤鸭、蛋糕、键盘、鲜花…最好的生日' },
+        { icon: '💍', name: '订婚', event: '在亲友见证下，许下一生的承诺' },
+        { icon: '💒', name: '领证', event: '情人节快乐！我们结婚了！' },
+        { icon: '🌟', name: '未来', event: '余生还很长，我们一起走' }
+    ];
+
+    const track = document.getElementById('boardTrack');
+    const eventEl = document.getElementById('boardEvent');
+    const diceResult = document.getElementById('diceResult');
+    const btnDice = document.getElementById('btnDice');
+    let pos = 0;
+
+    // 生成棋盘
+    cells.forEach((c, i) => {
+        const div = document.createElement('div');
+        div.className = 'board-cell' + (i === 0 ? ' current' : '');
+        div.id = 'cell-' + i;
+        div.innerHTML = '<span class="cell-icon">' + c.icon + '</span>' + c.name;
+        track.appendChild(div);
+    });
+
+    btnDice.addEventListener('click', () => {
+        btnDice.disabled = true;
+        const dice = Math.floor(Math.random() * 6) + 1;
+        diceResult.textContent = dice;
+
+        // 动画般子
+        let count = 0;
+        const anim = setInterval(() => {
+            diceResult.textContent = Math.floor(Math.random() * 6) + 1;
+            count++;
+            if (count > 10) {
+                clearInterval(anim);
+                diceResult.textContent = dice;
+                pos = Math.min(pos + dice, cells.length - 1);
+
+                // 更新位置
+                document.querySelectorAll('.board-cell').forEach(c => c.classList.remove('current'));
+                document.getElementById('cell-' + pos).classList.add('current');
+                eventEl.textContent = cells[pos].icon + ' ' + cells[pos].event;
+
+                if (pos >= cells.length - 1) {
+                    eventEl.textContent = '🎉 恭喜到达终点！你们的爱情故事，是最美的旅程 💕';
+                }
+                btnDice.disabled = false;
+            }
+        }, 80);
+    });
+})();
+
+/* ========== 二维码生成 ========== */
+(function initQR() {
+    const toggle = document.getElementById('qrToggle');
+    const popup = document.getElementById('qrPopup');
+    const canvas = document.getElementById('qrCanvas');
+    const ctx = canvas.getContext('2d');
+
+    toggle.addEventListener('click', () => {
+        popup.classList.toggle('show');
+    });
+
+    // 简单 QR 码绘制（用 URL 文本生成简单图案）
+    const url = window.location.href;
+    const size = 150;
+    const cellSize = 5;
+    const grid = size / cellSize;
+
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#333';
+
+    // 用 URL 的 hash 生成简单图案
+    for (let i = 0; i < grid; i++) {
+        for (let j = 0; j < grid; j++) {
+            const idx = (i * grid + j) % url.length;
+            if (url.charCodeAt(idx) % 3 === 0) {
+                ctx.fillRect(i * cellSize, j * cellSize, cellSize, cellSize);
+            }
+        }
+    }
+
+    // 定位角
+    function drawFinder(x, y) {
+        ctx.fillStyle = '#333';
+        ctx.fillRect(x, y, 35, 35);
+        ctx.fillStyle = 'white';
+        ctx.fillRect(x + 5, y + 5, 25, 25);
+        ctx.fillStyle = '#333';
+        ctx.fillRect(x + 10, y + 10, 15, 15);
+    }
+    drawFinder(0, 0);
+    drawFinder(size - 35, 0);
+    drawFinder(0, size - 35);
+})();
+
+/* ========== 季节主题 ========== */
+(function initSeasonTheme() {
+    const month = new Date().getMonth() + 1;
+    let season = '';
+    if (month >= 3 && month <= 5) season = 'spring';
+    else if (month >= 6 && month <= 8) season = 'summer';
+    else if (month >= 9 && month <= 11) season = 'autumn';
+    else season = 'winter';
+
+    document.body.classList.add('season-' + season);
+})();
