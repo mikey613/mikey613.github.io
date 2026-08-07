@@ -292,6 +292,8 @@ input, textarea, [contenteditable] {
     color: var(--text-secondary);
     margin-bottom: 40px;
     letter-spacing: 2px;
+    min-height: 1.5em;
+    display: inline-block;
 }
 
 /* 恋爱计时器 */
@@ -2563,7 +2565,7 @@ body.season-winter { --accent: #a0c0f0; --accent-light: #b5d0f5; --accent-glow: 
     .map-board { height: 300px; }
     .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
     .qr-widget { bottom: 15px; left: 15px; }
-    .help-widget { bottom: 75px; right: 15px; }
+    .help-widget { bottom: 75px; right: 15px; z-index: 9998; }
     .help-panel { width: 90vw; max-height: 70vh; }
 }
 
@@ -2572,7 +2574,7 @@ body.season-winter { --accent: #a0c0f0; --accent-light: #b5d0f5; --accent-glow: 
     position: fixed;
     bottom: 90px;
     right: 30px;
-    z-index: 999;
+    z-index: 9998;
 }
 
 .help-toggle {

@@ -484,16 +484,28 @@ const AppUser = (function() {
 (function initMusic() {
     const btn = document.getElementById('musicToggle');
     const audio = document.getElementById('bgm');
+    if (!audio) return;
     audio.volume = 0.4;
     let playing = false;
+
+    // 音频加载错误处理
+    audio.addEventListener('error', (e) => {
+        console.warn('音频加载失败:', e);
+        btn.style.opacity = '0.5';
+        btn.title = '音乐加载失败';
+    });
 
     btn.addEventListener('click', () => {
         playing = !playing;
         btn.classList.toggle('playing', playing);
         if (playing) {
-            audio.play().catch(() => {
+            audio.play().then(() => {
+                console.log('音乐播放中');
+            }).catch((err) => {
+                console.warn('播放失败:', err);
                 playing = false;
                 btn.classList.remove('playing');
+                btn.title = '点击播放音乐';
             });
         } else {
             audio.pause();
