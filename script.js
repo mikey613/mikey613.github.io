@@ -24,7 +24,7 @@ const GitHubSync = (function() {
             if (!resp.ok) return null;
             const data = await resp.json();
             return {
-                content: JSON.parse(atob(data.content)),
+                content: JSON.parse(decodeURIComponent(escape(atob(data.content)))),
                 sha: data.sha
             };
         } catch (e) {
