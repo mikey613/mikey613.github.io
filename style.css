@@ -2565,15 +2565,15 @@ body.season-winter { --accent: #a0c0f0; --accent-light: #b5d0f5; --accent-glow: 
     .map-board { height: 300px; }
     .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
     .qr-widget { bottom: 15px; left: 15px; }
-    .help-widget { bottom: 75px; right: 15px; z-index: 9998; }
+    .help-widget { top: 70px; left: 15px; z-index: 9998; }
     .help-panel { width: 90vw; max-height: 70vh; }
 }
 
 /* ========== 帮助引导 ========== */
 .help-widget {
     position: fixed;
-    bottom: 90px;
-    right: 30px;
+    top: 80px;
+    left: 30px;
     z-index: 9998;
 }
 
