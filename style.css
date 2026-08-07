@@ -38,6 +38,17 @@ body {
     line-height: 1.7;
 }
 
+/* 性能优化：GPU加速 */
+#starCanvas,
+.floating-hearts,
+.shooting-star,
+.cursor-heart,
+.firework-particle,
+.glow-ring {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+}
+
 /* ========== 星空画布 ========== */
 #starCanvas {
     position: fixed;

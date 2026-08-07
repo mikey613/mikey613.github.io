@@ -1,13 +1,25 @@
+/* ========== 设备检测：移动端降级 ========== */
+const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || window.innerWidth < 768;
+const isLowEnd = isMobile || navigator.hardwareConcurrency <= 4;
+
 /* ========== 星空画布 ========== */
 (function initStarCanvas() {
     const canvas = document.getElementById('starCanvas');
     const ctx = canvas.getContext('2d');
     let stars = [];
-    const STAR_COUNT = 200;
+    // 移动端减少星星数量，降低分辨率
+    const STAR_COUNT = isLowEnd ? 60 : 200;
+    const FPS = isLowEnd ? 24 : 60;
+    let lastFrame = 0;
+    const frameInterval = 1000 / FPS;
 
     function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        // 移动端降低画布分辨率
+        const scale = isLowEnd ? 0.6 : 1;
+        canvas.width = window.innerWidth * scale;
+        canvas.height = window.innerHeight * scale;
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
     }
 
     function createStars() {
@@ -24,7 +36,11 @@
         }
     }
 
-    function drawStars() {
+    function drawStars(timestamp) {
+        requestAnimationFrame(drawStars);
+        if (timestamp - lastFrame < frameInterval) return;
+        lastFrame = timestamp;
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         stars.forEach(s => {
             s.alpha += s.alphaDir;
@@ -38,12 +54,11 @@
             ctx.fill();
         });
         ctx.globalAlpha = 1;
-        requestAnimationFrame(drawStars);
     }
 
     resize();
     createStars();
-    drawStars();
+    requestAnimationFrame(drawStars);
 
     window.addEventListener('resize', () => {
         resize();
@@ -54,6 +69,8 @@
 /* ========== 流星效果 ========== */
 (function initShootingStars() {
     const container = document.getElementById('shooting-stars');
+    // 移动端降低频率
+    const interval = isLowEnd ? 8000 : 4000;
 
     function createShootingStar() {
         const star = document.createElement('div');
@@ -66,7 +83,7 @@
         setTimeout(() => star.remove(), 2000);
     }
 
-    setInterval(createShootingStar, 4000);
+    setInterval(createShootingStar, interval);
 })();
 
 /* ========== 导航栏 ========== */
@@ -417,9 +434,9 @@ window.addEventListener('load', () => {
         setTimeout(() => el.remove(), duration);
     }
 
-    // 每 2~4 秒发射一条
+    // 每 2~4 秒发射一条（移动端降频）
     function scheduleNext() {
-        const delay = Math.random() * 2000 + 2000;
+        const delay = isLowEnd ? (4000 + Math.random() * 4000) : (2000 + Math.random() * 2000);
         setTimeout(() => {
             spawnDanmaku();
             scheduleNext();
@@ -841,14 +858,15 @@ window.addEventListener('load', () => {
     loadMessages();
 })();
 
-/* ========== 鼠标拖尾爱心 ========== */
+/* ========== 鼠标拖尾爱心（移动端禁用） ========== */
 (function initCursorTrail() {
+    if (isMobile) return; // 移动端禁用
     const hearts = ['❤️', '💕', '💖', '✨', '💗'];
     let lastTime = 0;
 
     document.addEventListener('mousemove', (e) => {
         const now = Date.now();
-        if (now - lastTime < 120) return;
+        if (now - lastTime < 150) return;
         lastTime = now;
 
         const el = document.createElement('div');
@@ -862,15 +880,14 @@ window.addEventListener('load', () => {
     });
 })();
 
-/* ========== 点击烟花 ========== */
+/* ========== 点击烟花（移动端减少粒子） ========== */
 (function initClickFirework() {
     const colors = ['#ff6b9d', '#7c6ef0', '#f5c842', '#a78bfa', '#ff9ff3', '#48dbfb'];
 
     document.addEventListener('click', (e) => {
-        // 不干扰按钮等交互元素
         if (e.target.closest('button, a, input, textarea, select, .gallery-item, .puzzle-piece, .sweet-card, .nav-link')) return;
 
-        const count = 12 + Math.floor(Math.random() * 8);
+        const count = isLowEnd ? 6 : (12 + Math.floor(Math.random() * 8));
         for (let i = 0; i < count; i++) {
             const p = document.createElement('div');
             p.className = 'firework-particle';
@@ -879,7 +896,7 @@ window.addEventListener('load', () => {
             p.style.background = colors[Math.floor(Math.random() * colors.length)];
 
             const angle = (Math.PI * 2 / count) * i;
-            const dist = 40 + Math.random() * 60;
+            const dist = 30 + Math.random() * 40;
             p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
             p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
 
@@ -889,10 +906,13 @@ window.addEventListener('load', () => {
     });
 })();
 
-/* ========== 全屏飘浮爱心 ========== */
+/* ========== 全屏飘浮爱心（移动端降级） ========== */
 (function initFloatingHearts() {
     const container = document.getElementById('floatingHearts');
     const emojis = ['❤️', '💕', '💖', '💗', '🌸', '✨', '💫', '🌟'];
+    // 移动端降低频率
+    const minDelay = isLowEnd ? 5000 : 2000;
+    const maxDelay = isLowEnd ? 8000 : 4000;
 
     function spawn() {
         const el = document.createElement('div');
@@ -907,10 +927,9 @@ window.addEventListener('load', () => {
         setTimeout(() => el.remove(), dur);
     }
 
-    // 每 2~4 秒生成一个
     function loop() {
         spawn();
-        setTimeout(loop, 2000 + Math.random() * 2000);
+        setTimeout(loop, minDelay + Math.random() * (maxDelay - minDelay));
     }
     loop();
 })();
