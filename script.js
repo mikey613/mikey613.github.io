@@ -802,14 +802,22 @@ window.addEventListener('load', () => {
     }
 
     // ===== 数据加载 =====
+    let _msgSha = null;
+
     async function loadMessages() {
         if (useGitHub) {
-            // GitHub 模式：从 data/messages.json 读取
+            // GitHub 模式：通过 GitHubSync 读取
             try {
-                const resp = await fetch('data/messages.json?t=' + Date.now());
-                if (!resp.ok) throw new Error('加载失败');
-                const messages = await resp.json();
-                renderMessages(messages);
+                const remote = await GitHubSync.get('data/messages.json');
+                if (remote) {
+                    _msgSha = remote.sha;
+                    renderMessages(remote.content);
+                } else {
+                    // 回退到直接 fetch
+                    const resp = await fetch('data/messages.json?t=' + Date.now());
+                    const messages = resp.ok ? await resp.json() : [];
+                    renderMessages(messages);
+                }
             } catch (e) {
                 gbLoading.innerHTML = '<i class="fas fa-exclamation-circle"></i> 加载失败，请刷新重试';
             }
@@ -819,7 +827,6 @@ window.addEventListener('load', () => {
                 const resp = await fetch('data/messages.json');
                 const preset = resp.ok ? await resp.json() : [];
                 const local = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-                // 合并预设和本地的（去重）
                 const all = mergeMessages(preset, local);
                 renderMessages(all);
             } catch (e) {
@@ -888,32 +895,37 @@ window.addEventListener('load', () => {
         submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 发送祝福';
     }
 
-    // GitHub 提交
+    // GitHub 提交（直接通过 Contents API）
     async function submitToGitHub(name, message) {
         showStatus('正在提交到 GitHub...', 'info');
         try {
-            const resp = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/dispatches', {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Authorization': 'token ' + GITHUB_TOKEN,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    event_type: 'new_message',
-                    client_payload: { name, message }
-                })
-            });
+            // 先读取当前数据
+            const remote = await GitHubSync.get('data/messages.json');
+            const messages = remote ? remote.content : [];
+            const sha = remote ? remote.sha : null;
 
-            if (resp.status === 204) {
-                showStatus('祝福已发送！约 1 分钟后刷新可见', 'success');
+            // 添加新留言
+            const now = new Date();
+            const time = now.getFullYear() + '-' +
+                String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                String(now.getDate()).padStart(2, '0') + ' ' +
+                String(now.getHours()).padStart(2, '0') + ':' +
+                String(now.getMinutes()).padStart(2, '0');
+            messages.push({ name, message, time });
+
+            // 写回 GitHub
+            const ok = await GitHubSync.set('data/messages.json', messages, sha);
+            if (ok) {
+                showStatus('祝福已发送！所有人可见 💕', 'success');
                 gbName.value = '';
                 gbMessage.value = '';
+                renderMessages(messages);
             } else {
-                throw new Error('GitHub API: ' + resp.status);
+                throw new Error('写入失败');
             }
         } catch (e) {
-            showStatus('提交失败: ' + e.message, 'error');
+            showStatus('提交失败: ' + e.message + '，已保存到本地', 'error');
+            submitToLocal(name, message);
         }
     }
 
