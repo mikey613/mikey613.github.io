@@ -2,6 +2,59 @@
 const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || window.innerWidth < 768;
 const isLowEnd = isMobile || navigator.hardwareConcurrency <= 4;
 
+/* ========== GitHub 配置 ========== */
+const GITHUB_REPO = 'mikey613/mikey613.github.io';
+const GITHUB_TOKEN = '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';
+
+/* ========== GitHub 远程同步模块 ========== */
+const GitHubSync = (function() {
+    const enabled = !!(GITHUB_REPO && GITHUB_TOKEN);
+    const api = 'https://api.github.com';
+    const headers = {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': 'token ' + GITHUB_TOKEN,
+        'Content-Type': 'application/json'
+    };
+
+    async function get(path) {
+        if (!enabled) return null;
+        try {
+            const resp = await fetch(api + '/repos/' + GITHUB_REPO + '/contents/' + path);
+            if (!resp.ok) return null;
+            const data = await resp.json();
+            return {
+                content: JSON.parse(atob(data.content)),
+                sha: data.sha
+            };
+        } catch (e) {
+            console.warn('[GitHubSync] get failed:', e);
+            return null;
+        }
+    }
+
+    async function set(path, data, sha) {
+        if (!enabled) return false;
+        try {
+            const body = {
+                message: 'sync: update ' + path,
+                content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))),
+                sha: sha
+            };
+            const resp = await fetch(api + '/repos/' + GITHUB_REPO + '/contents/' + path, {
+                method: 'PUT',
+                headers: headers,
+                body: JSON.stringify(body)
+            });
+            return resp.ok;
+        } catch (e) {
+            console.warn('[GitHubSync] set failed:', e);
+            return false;
+        }
+    }
+
+    return { enabled, get, set };
+})();
+
 /* ========== 星空画布 ========== */
 (function initStarCanvas() {
     const canvas = document.getElementById('starCanvas');
@@ -289,35 +342,79 @@ const isLowEnd = isMobile || navigator.hardwareConcurrency <= 4;
     document.getElementById('anni-her-birthday').textContent = '距离下次生日还有 ' + herBdayDiff + ' 天';
 })();
 
-/* ========== 心愿墙 ========== */
+/* ========== 心愿墙（远程同步） ========== */
 (function initWishes() {
     const wishInput = document.getElementById('wishInput');
     const addBtn = document.getElementById('addWish');
     const wall = document.getElementById('wishesWall');
+    const KEY = 'love-wishes';
+    let _sha = null;
 
-    function addWish(text) {
-        const wish = document.createElement('div');
-        wish.className = 'wish-star';
-        // 随机位置，避免太靠边
-        const top = Math.random() * 80 + 5;
-        const left = Math.random() * 75 + 5;
-        wish.style.top = top + '%';
-        wish.style.left = left + '%';
-        wish.style.animationDelay = (Math.random() * 2) + 's';
-        wish.innerHTML = '<span>' + text + '</span>';
-        wall.appendChild(wish);
+    function getWishes() {
+        return JSON.parse(localStorage.getItem(KEY) || '[]');
+    }
+
+    function saveLocal(wishes) {
+        localStorage.setItem(KEY, JSON.stringify(wishes));
+    }
+
+    async function pushToGitHub(wishes) {
+        const ok = await GitHubSync.set('data/wishes.json', wishes, _sha);
+        if (ok) {
+            const fresh = await GitHubSync.get('data/wishes.json');
+            if (fresh) _sha = fresh.sha;
+        }
+    }
+
+    function save(wishes) {
+        saveLocal(wishes);
+        pushToGitHub(wishes);
+    }
+
+    function renderWish(wish) {
+        const el = document.createElement('div');
+        el.className = 'wish-star';
+        el.style.top = wish.top + '%';
+        el.style.left = wish.left + '%';
+        el.style.animationDelay = wish.delay + 's';
+        el.innerHTML = '<span>' + wish.text + '</span>';
+        wall.appendChild(el);
+    }
+
+    function renderAll() {
+        wall.innerHTML = '';
+        getWishes().forEach(renderWish);
     }
 
     addBtn.addEventListener('click', () => {
         const text = wishInput.value.trim();
         if (!text) return;
-        addWish(text);
+        const wish = {
+            text: text,
+            top: Math.random() * 80 + 5,
+            left: Math.random() * 75 + 5,
+            delay: Math.random() * 2
+        };
+        const wishes = getWishes();
+        wishes.push(wish);
+        save(wishes);
+        renderWish(wish);
         wishInput.value = '';
     });
 
     wishInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') addBtn.click();
     });
+
+    // 初始化：从 GitHub 拉取
+    (async () => {
+        const remote = await GitHubSync.get('data/wishes.json');
+        if (remote) {
+            _sha = remote.sha;
+            saveLocal(remote.content);
+        }
+        renderAll();
+    })();
 })();
 
 /* ========== 音乐按钮（占位） ========== */
@@ -688,13 +785,8 @@ window.addEventListener('load', () => {
 
 /* ========== 嘉宾留言板（双模式：GitHub 持久化 + localStorage 备用） ========== */
 (function initGuestbook() {
-    // ============ 配置区 ============
-    // 能访问 GitHub 时填写，不能访问时留空即可（自动用本地存储）
-    const GITHUB_REPO = ''; // 格式: '用户名/仓库名'，如 'mikey613/mikey613.github.io'
-    const GITHUB_TOKEN = ''; // GitHub Personal Access Token
-    // ================================
-
-    const useGitHub = !!(GITHUB_REPO && GITHUB_TOKEN);
+    // 使用全局 GITHUB_REPO 和 GITHUB_TOKEN
+    const useGitHub = GitHubSync.enabled;
     const STORAGE_KEY = 'love-guestbook-local';
 
     const gbList = document.getElementById('gbList');
@@ -1198,16 +1290,34 @@ window.addEventListener('load', () => {
     window.addEventListener('resize', drawLines);
 })();
 
-/* ========== 共同日记 ========== */
+/* ========== 共同日记（远程同步） ========== */
 (function initDiary() {
     const calendar = document.getElementById('diaryCalendar');
     const dateInput = document.getElementById('diaryDate');
     const textInput = document.getElementById('diaryText');
     const submitBtn = document.getElementById('diarySubmit');
     const STORAGE_KEY = 'love-diary';
+    let _sha = null;
 
     function getDiary() {
         return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    }
+
+    function saveLocal(diary) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(diary));
+    }
+
+    async function pushToGitHub(diary) {
+        const ok = await GitHubSync.set('data/diary.json', diary, _sha);
+        if (ok) {
+            const fresh = await GitHubSync.get('data/diary.json');
+            if (fresh) _sha = fresh.sha;
+        }
+    }
+
+    function save(diary) {
+        saveLocal(diary);
+        pushToGitHub(diary);
     }
 
     function renderCalendar() {
@@ -1220,15 +1330,12 @@ window.addEventListener('load', () => {
         const today = now.getDate();
 
         let html = '';
-        // 周标题
         ['日', '一', '二', '三', '四', '五', '六'].forEach(d => {
             html += '<div class="diary-day" style="font-weight:600;color:var(--accent-light);font-size:0.7rem;">' + d + '</div>';
         });
-        // 空白填充
         for (let i = 0; i < firstDay; i++) {
             html += '<div class="diary-day"></div>';
         }
-        // 日期
         for (let d = 1; d <= daysInMonth; d++) {
             const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
             const hasEntry = diary[dateStr] ? 'has-entry' : '';
@@ -1244,16 +1351,23 @@ window.addEventListener('load', () => {
         if (!date || !text) return;
         const diary = getDiary();
         diary[date] = text;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(diary));
+        save(diary);
         textInput.value = '';
         renderCalendar();
     });
 
-    // 默认今天
     const now = new Date();
     dateInput.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
 
-    renderCalendar();
+    // 初始化：从 GitHub 拉取
+    (async () => {
+        const remote = await GitHubSync.get('data/diary.json');
+        if (remote) {
+            _sha = remote.sha;
+            saveLocal(remote.content);
+        }
+        renderCalendar();
+    })();
 })();
 
 /* ========== 照片对比滑块 ========== */
@@ -1680,19 +1794,33 @@ window.addEventListener('load', () => {
     }
 })();
 
-/* ========== 共享待办 ========== */
+/* ========== 共享待办（远程同步） ========== */
 (function initTodo() {
     const input = document.getElementById('todoInput');
     const addBtn = document.getElementById('todoAdd');
     const list = document.getElementById('todoList');
     const KEY = 'love-todos';
+    let _sha = null;
 
     function getTodos() {
         return JSON.parse(localStorage.getItem(KEY) || '[]');
     }
 
-    function save(todos) {
+    function saveLocal(todos) {
         localStorage.setItem(KEY, JSON.stringify(todos));
+    }
+
+    async function pushToGitHub(todos) {
+        const ok = await GitHubSync.set('data/todos.json', todos, _sha);
+        if (ok) {
+            const fresh = await GitHubSync.get('data/todos.json');
+            if (fresh) _sha = fresh.sha;
+        }
+    }
+
+    function save(todos) {
+        saveLocal(todos);
+        pushToGitHub(todos);
     }
 
     function render() {
@@ -1702,7 +1830,7 @@ window.addEventListener('load', () => {
             const li = document.createElement('li');
             li.className = t.done ? 'done' : '';
             li.innerHTML =
-                '<span class="todo-check" data-i="' + i + '">✓</span>' +
+                '<span class="todo-check" data-i="' + i + '">\u2713</span>' +
                 '<span>' + t.text + '</span>' +
                 '<span class="todo-del" data-i="' + i + '"><i class="fas fa-times"></i></span>';
             list.appendChild(li);
@@ -1741,7 +1869,15 @@ window.addEventListener('load', () => {
         }
     });
 
-    render();
+    // 初始化：从 GitHub 拉取最新数据
+    (async () => {
+        const remote = await GitHubSync.get('data/todos.json');
+        if (remote) {
+            _sha = remote.sha;
+            saveLocal(remote.content);
+        }
+        render();
+    })();
 })();
 
 /* ========== 日常打卡 ========== */
@@ -1907,25 +2043,38 @@ window.addEventListener('load', () => {
     render();
 })();
 
-/* ========== 心情记录 ========== */
+/* ========== 心情记录（远程同步） ========== */
 (function initMood() {
     const picker = document.getElementById('moodPicker');
     const history = document.getElementById('moodHistory');
     const KEY = 'love-moods';
+    let _sha = null;
 
     function getData() {
         return JSON.parse(localStorage.getItem(KEY) || '{}');
     }
 
-    function save(data) {
+    function saveLocal(data) {
         localStorage.setItem(KEY, JSON.stringify(data));
+    }
+
+    async function pushToGitHub(data) {
+        const ok = await GitHubSync.set('data/moods.json', data, _sha);
+        if (ok) {
+            const fresh = await GitHubSync.get('data/moods.json');
+            if (fresh) _sha = fresh.sha;
+        }
+    }
+
+    function save(data) {
+        saveLocal(data);
+        pushToGitHub(data);
     }
 
     function renderHistory() {
         const data = getData();
         const today = new Date();
         history.innerHTML = '';
-        // 显示最近 14 天
         for (let i = 13; i >= 0; i--) {
             const d = new Date(today);
             d.setDate(d.getDate() - i);
@@ -1942,7 +2091,6 @@ window.addEventListener('load', () => {
     picker.addEventListener('click', (e) => {
         const emoji = e.target.closest('.mood-emoji');
         if (!emoji) return;
-        const mood = emoji.dataset.mood;
         const today = new Date();
         const ds = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
         const data = getData();
@@ -1954,15 +2102,22 @@ window.addEventListener('load', () => {
         renderHistory();
     });
 
-    // 检查今天是否已选心情
-    const today = new Date();
-    const ds = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-    const data = getData();
-    if (data[ds]) {
-        picker.querySelectorAll('.mood-emoji').forEach(e => {
-            if (e.textContent === data[ds]) e.classList.add('selected');
-        });
-    }
-
-    renderHistory();
+    // 初始化：从 GitHub 拉取
+    (async () => {
+        const remote = await GitHubSync.get('data/moods.json');
+        if (remote) {
+            _sha = remote.sha;
+            saveLocal(remote.content);
+        }
+        // 检查今天是否已选心情
+        const today = new Date();
+        const ds = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+        const data = getData();
+        if (data[ds]) {
+            picker.querySelectorAll('.mood-emoji').forEach(e => {
+                if (e.textContent === data[ds]) e.classList.add('selected');
+            });
+        }
+        renderHistory();
+    })();
 })();
