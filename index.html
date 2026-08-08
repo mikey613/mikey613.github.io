@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>李文豪 & 叶霞 | 属于我们的星空</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=20260808g">
+    <link rel="stylesheet" href="style.css?v=20260808h">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
@@ -883,16 +883,39 @@
         <h2 class="section-title"><i class="fas fa-paw"></i> 我们的宠物</h2>
         <p class="section-subtitle">一起照顾TA，TA会越来越开心</p>
         <div class="pet-container">
-            <div class="pet-avatar" id="petAvatar">🐣</div>
-            <div class="pet-name" id="petName">小爱心</div>
-            <div class="pet-status">
-                <div class="pet-stat"><span>心情</span><div class="pet-bar"><div class="pet-bar-fill" id="petMood" style="width:50%"></div></div></div>
-                <div class="pet-stat"><span>饱食</span><div class="pet-bar"><div class="pet-bar-fill" id="petHunger" style="width:50%"></div></div></div>
+            <div class="pet-header">
+                <div class="pet-avatar" id="petAvatar">🐣</div>
+                <div class="pet-info">
+                    <div class="pet-name" id="petName">小爱心</div>
+                    <div class="pet-level" id="petLevel">Lv.1 幼崽</div>
+                    <div class="pet-speech" id="petSpeech">你好呀~</div>
+                </div>
+                <div class="pet-coins" id="petCoins">💰 0</div>
+            </div>
+            <div class="pet-stats">
+                <div class="pet-stat"><span>❤️ 心情</span><div class="pet-bar"><div class="pet-bar-fill" id="petMood" style="width:50%"></div></div><span id="petMoodVal">50</span></div>
+                <div class="pet-stat"><span>🍖 饱食</span><div class="pet-bar"><div class="pet-bar-fill" id="petHunger" style="width:50%"></div></div><span id="petHungerVal">50</span></div>
+                <div class="pet-stat"><span>✨ 清洁</span><div class="pet-bar"><div class="pet-bar-fill" id="petClean" style="width:50%"></div></div><span id="petCleanVal">50</span></div>
+                <div class="pet-stat"><span>⚡ 精力</span><div class="pet-bar"><div class="pet-bar-fill" id="petEnergy" style="width:50%"></div></div><span id="petEnergyVal">50</span></div>
             </div>
             <div class="pet-actions">
                 <button class="pet-btn" id="petFeed">🍎 喂食</button>
                 <button class="pet-btn" id="petPlay">🎾 玩耍</button>
                 <button class="pet-btn" id="petPet">🤚 摸摸</button>
+                <button class="pet-btn" id="petWalk">🚶 散步</button>
+                <button class="pet-btn" id="petBath">🛁 洗澡</button>
+                <button class="pet-btn" id="petSleep">💤 睡觉</button>
+            </div>
+            <div class="pet-shop">
+                <button class="pet-btn pet-shop-btn" id="petShopBtn">🏪 宠物商店</button>
+            </div>
+        </div>
+        <!-- 宠物商店弹窗 -->
+        <div class="pet-shop-modal" id="petShopModal" style="display:none;">
+            <div class="pet-shop-content">
+                <h3>🏪 宠物商店</h3>
+                <div class="pet-shop-items" id="petShopItems"></div>
+                <button class="pet-btn" id="petShopClose">关闭</button>
             </div>
         </div>
     </section>
@@ -1099,6 +1122,6 @@
         <i class="fas fa-music"></i>
     </div>
 
-    <script src="script.js?v=20260808g"></script>
+    <script src="script.js?v=20260808h"></script>
 </body>
 </html>

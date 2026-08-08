@@ -3842,33 +3842,66 @@ body.season-winter { --accent: #a0c0f0; --accent-light: #b5d0f5; --accent-glow: 
 
 /* ========== 电子宠物 ========== */
 .pet-container {
-    max-width: 400px;
+    max-width: 450px;
     margin: 0 auto;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 30px;
-    text-align: center;
+    padding: 25px;
+}
+
+.pet-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
 .pet-avatar {
-    font-size: 4rem;
-    margin-bottom: 10px;
+    font-size: 3.5rem;
     animation: petBounce 2s ease-in-out infinite;
 }
 
 @keyframes petBounce {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+    50% { transform: translateY(-8px); }
+}
+
+.pet-info {
+    flex: 1;
+    text-align: left;
 }
 
 .pet-name {
     font-size: 1.2rem;
     color: var(--text-primary);
-    margin-bottom: 20px;
+    font-weight: bold;
 }
 
-.pet-status {
+.pet-level {
+    font-size: 0.85rem;
+    color: var(--accent);
+    margin-top: 2px;
+}
+
+.pet-speech {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-top: 5px;
+    padding: 5px 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    max-width: 200px;
+}
+
+.pet-coins {
+    font-size: 1.1rem;
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.pet-stats {
     margin-bottom: 20px;
 }
 
@@ -3876,49 +3909,161 @@ body.season-winter { --accent: #a0c0f0; --accent-light: #b5d0f5; --accent-glow: 
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
-.pet-stat span {
-    width: 40px;
+.pet-stat span:first-child {
+    width: 80px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.pet-stat span:last-child {
+    width: 30px;
     font-size: 0.8rem;
     color: var(--text-secondary);
+    text-align: right;
 }
 
 .pet-bar {
     flex: 1;
-    height: 10px;
+    height: 12px;
     background: rgba(255,255,255,0.1);
-    border-radius: 5px;
+    border-radius: 6px;
     overflow: hidden;
 }
 
 .pet-bar-fill {
     height: 100%;
     background: linear-gradient(90deg, var(--accent), var(--pink));
-    border-radius: 5px;
+    border-radius: 6px;
     transition: width 0.3s;
 }
 
 .pet-actions {
-    display: flex;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
+    margin-bottom: 15px;
 }
 
 .pet-btn {
-    padding: 8px 16px;
-    border-radius: 20px;
+    padding: 12px 8px;
+    border-radius: 12px;
     border: 1px solid var(--border);
     background: var(--bg-card);
     color: var(--text-primary);
     cursor: pointer;
     transition: var(--transition);
+    font-size: 0.9rem;
 }
 
 .pet-btn:hover {
     background: var(--accent);
     color: white;
+    transform: translateY(-2px);
+}
+
+.pet-btn:active {
+    transform: translateY(0);
+}
+
+.pet-shop {
+    text-align: center;
+}
+
+.pet-shop-btn {
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #333;
+    border: none;
+    font-weight: bold;
+}
+
+.pet-shop-btn:hover {
+    background: linear-gradient(135deg, #ffaa00, #ff8800);
+}
+
+/* 宠物商店弹窗 */
+.pet-shop-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pet-shop-content {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 30px;
+    max-width: 400px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.pet-shop-content h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--text-primary);
+}
+
+.pet-shop-items {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.shop-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+}
+
+.shop-item-icon {
+    font-size: 2rem;
+}
+
+.shop-item-info {
+    flex: 1;
+}
+
+.shop-item-name {
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.shop-item-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.shop-item-buy {
+    padding: 8px 15px;
+    border-radius: 15px;
+    border: none;
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.shop-item-buy:hover {
+    background: var(--pink);
+}
+
+.shop-item-buy:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* ========== 情侣歌单 ========== */

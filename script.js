@@ -2808,43 +2808,227 @@ window.addEventListener('load', () => {
     setInterval(render, 10000);
 })();
 
-/* ========== 电子宠物 ========== */
+/* ========== 电子宠物（增强版） ========== */
 (function initPet() {
     const avatar = document.getElementById('petAvatar');
+    const levelEl = document.getElementById('petLevel');
+    const speechEl = document.getElementById('petSpeech');
+    const coinsEl = document.getElementById('petCoins');
     const moodBar = document.getElementById('petMood');
     const hungerBar = document.getElementById('petHunger');
-    const feedBtn = document.getElementById('petFeed');
-    const playBtn = document.getElementById('petPlay');
-    const petBtn = document.getElementById('petPet');
-
+    const cleanBar = document.getElementById('petClean');
+    const energyBar = document.getElementById('petEnergy');
+    const moodVal = document.getElementById('petMoodVal');
+    const hungerVal = document.getElementById('petHungerVal');
+    const cleanVal = document.getElementById('petCleanVal');
+    const energyVal = document.getElementById('petEnergyVal');
+    
+    // 宠物说话
+    const speeches = {
+        happy: ['好开心呀~', '最喜欢你们了！', '今天也要开心哦~', '爱你们哟❤', '嘻嘻~'],
+        normal: ['有点无聊...', '陪我玩嘛~', '肚子有点饿', '想出去走走~'],
+        sad: ['好难过...', '不要忽略我嘛', '我饿了...', '想洗澡澡~'],
+        hungry: ['好饿啊...', '要吃东西！', '肚子咕咕叫~'],
+        dirty: ['好脏呀...', '想洗澡~', '帮我洗白白嘛~'],
+        tired: ['好困...', '想睡觉觉~', '没力气了...']
+    };
+    
+    // 进化阶段
+    const evolutions = [
+        { level: 1, name: '幼崽', minScore: 0, avatar: '🐣' },
+        { level: 2, name: '幼年', minScore: 100, avatar: '🐥' },
+        { level: 3, name: '少年', minScore: 300, avatar: '🐤' },
+        { level: 4, name: '成年', minScore: 600, avatar: '🐔' },
+        { level: 5, name: '精英', minScore: 1000, avatar: '🦅' },
+        { level: 6, name: '王者', minScore: 2000, avatar: '🐉' }
+    ];
+    
+    // 商店物品
+    const shopItems = [
+        { id: 'food1', name: '高级猫粮', icon: '🍖', desc: '饱食+30', price: 50, effect: { hunger: 30 } },
+        { id: 'food2', name: '小蛋糕', icon: '🍰', desc: '心情+20, 饱食+10', price: 80, effect: { mood: 20, hunger: 10 } },
+        { id: 'toy1', name: '毛线球', icon: '🧶', desc: '心情+30', price: 60, effect: { mood: 30 } },
+        { id: 'toy2', name: '逗猫棒', icon: '🎣', desc: '心情+25, 精力-10', price: 70, effect: { mood: 25, energy: -10 } },
+        { id: 'soap', name: '香波', icon: '🧴', desc: '清洁+40', price: 40, effect: { clean: 40 } },
+        { id: 'bed', name: '小床', icon: '🛏️', desc: '精力+50', price: 100, effect: { energy: 50 } },
+        { id: 'gift', name: '神秘礼物', icon: '🎁', desc: '全属性+20', price: 200, effect: { mood: 20, hunger: 20, clean: 20, energy: 20 } }
+    ];
+    
+    function getPetScore(pet) {
+        return (pet.mood || 0) + (pet.hunger || 0) + (pet.clean || 0) + (pet.energy || 0);
+    }
+    
+    function getEvolution(pet) {
+        const score = getPetScore(pet);
+        const totalScore = (pet.totalCare || 0) + score;
+        for (let i = evolutions.length - 1; i >= 0; i--) {
+            if (totalScore >= evolutions[i].minScore) {
+                return { ...evolutions[i], totalScore };
+            }
+        }
+        return { ...evolutions[0], totalScore };
+    }
+    
+    function getSpeech(pet) {
+        let category = 'normal';
+        if (pet.mood >= 80 && pet.hunger >= 60) category = 'happy';
+        else if (pet.hunger < 30) category = 'hungry';
+        else if (pet.clean < 30) category = 'dirty';
+        else if (pet.energy < 30) category = 'tired';
+        else if (pet.mood < 40) category = 'sad';
+        
+        const options = speeches[category];
+        return options[Math.floor(Math.random() * options.length)];
+    }
+    
     function renderWith(pet) {
+        // 确保所有属性有默认值
+        pet.mood = pet.mood || 50;
+        pet.hunger = pet.hunger || 50;
+        pet.clean = pet.clean || 50;
+        pet.energy = pet.energy || 50;
+        pet.coins = pet.coins || 0;
+        pet.totalCare = pet.totalCare || 0;
+        
+        // 更新状态条
         moodBar.style.width = pet.mood + '%';
         hungerBar.style.width = pet.hunger + '%';
-        if (pet.mood >= 80) avatar.textContent = '😻';
-        else if (pet.mood >= 50) avatar.textContent = '🐱';
-        else if (pet.mood >= 20) avatar.textContent = '🐣';
-        else avatar.textContent = '😿';
+        cleanBar.style.width = pet.clean + '%';
+        energyBar.style.width = pet.energy + '%';
+        
+        // 更新数值
+        moodVal.textContent = Math.round(pet.mood);
+        hungerVal.textContent = Math.round(pet.hunger);
+        cleanVal.textContent = Math.round(pet.clean);
+        energyVal.textContent = Math.round(pet.energy);
+        
+        // 更新进化
+        const evo = getEvolution(pet);
+        avatar.textContent = evo.avatar;
+        levelEl.textContent = 'Lv.' + evo.level + ' ' + evo.name;
+        
+        // 更新金币
+        coinsEl.textContent = '💰 ' + pet.coins;
+        
+        // 更新说话
+        speechEl.textContent = getSpeech(pet);
     }
-
+    
     function render() {
         GitHubSync.get('data/pet.json').then(remote => {
-            let pet = remote ? remote.content : { mood: 50, hunger: 50 };
+            let pet = remote ? remote.content : { mood: 50, hunger: 50, clean: 50, energy: 50, coins: 0, totalCare: 0 };
             renderWith(pet);
         });
     }
-
-    function update(type, val) {
+    
+    function update(changes, earnCoins = 0) {
         GitHubSync.get('data/pet.json').then(remote => {
-            const pet = remote ? remote.content : { mood: 50, hunger: 50 };
+            const pet = remote ? remote.content : { mood: 50, hunger: 50, clean: 50, energy: 50, coins: 0, totalCare: 0 };
             const sha = remote ? remote.sha : null;
-            pet[type] = Math.min(100, Math.max(0, (pet[type] || 50) + val));
+            
+            // 应用变化
+            for (const [key, val] of Object.entries(changes)) {
+                if (key === 'coins' || key === 'totalCare') {
+                    pet[key] = (pet[key] || 0) + val;
+                } else {
+                    pet[key] = Math.min(100, Math.max(0, (pet[key] || 50) + val));
+                }
+            }
+            
+            // 赚取金币
+            if (earnCoins > 0) {
+                pet.coins = (pet.coins || 0) + earnCoins;
+                pet.totalCare = (pet.totalCare || 0) + earnCoins;
+            }
+            
             GitHubSync.set('data/pet.json', pet, sha).then(() => renderWith(pet));
         });
     }
-
-    feedBtn.addEventListener('click', () => { update('hunger', 15); update('mood', 5); });
-    playBtn.addEventListener('click', () => { update('mood', 20); update('hunger', -10); });
-    petBtn.addEventListener('click', () => { update('mood', 10); });
+    
+    // 原有按钮
+    document.getElementById('petFeed').addEventListener('click', () => {
+        update({ hunger: 15, mood: 5 }, 5);
+    });
+    document.getElementById('petPlay').addEventListener('click', () => {
+        update({ mood: 20, hunger: -10, energy: -5 }, 8);
+    });
+    document.getElementById('petPet').addEventListener('click', () => {
+        update({ mood: 10 }, 3);
+    });
+    
+    // 新按钮
+    document.getElementById('petWalk').addEventListener('click', () => {
+        update({ mood: 15, energy: -15, hunger: -5 }, 10);
+    });
+    document.getElementById('petBath').addEventListener('click', () => {
+        update({ clean: 30, mood: 5 }, 5);
+    });
+    document.getElementById('petSleep').addEventListener('click', () => {
+        update({ energy: 40, mood: 5 }, 3);
+    });
+    
+    // 商店
+    const shopModal = document.getElementById('petShopModal');
+    const shopItemsEl = document.getElementById('petShopItems');
+    
+    document.getElementById('petShopBtn').addEventListener('click', () => {
+        renderShop();
+        shopModal.style.display = 'flex';
+    });
+    
+    document.getElementById('petShopClose').addEventListener('click', () => {
+        shopModal.style.display = 'none';
+    });
+    
+    function renderShop() {
+        GitHubSync.get('data/pet.json').then(remote => {
+            const pet = remote ? remote.content : { coins: 0 };
+            const coins = pet.coins || 0;
+            
+            shopItemsEl.innerHTML = '';
+            shopItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'shop-item';
+                div.innerHTML = `
+                    <div class="shop-item-icon">${item.icon}</div>
+                    <div class="shop-item-info">
+                        <div class="shop-item-name">${item.name}</div>
+                        <div class="shop-item-desc">${item.desc}</div>
+                    </div>
+                    <button class="shop-item-buy" ${coins < item.price ? 'disabled' : ''}>💰 ${item.price}</button>
+                `;
+                
+                const buyBtn = div.querySelector('.shop-item-buy');
+                buyBtn.addEventListener('click', () => buyItem(item));
+                
+                shopItemsEl.appendChild(div);
+            });
+        });
+    }
+    
+    function buyItem(item) {
+        GitHubSync.get('data/pet.json').then(remote => {
+            const pet = remote ? remote.content : { coins: 0 };
+            const sha = remote ? remote.sha : null;
+            
+            if ((pet.coins || 0) < item.price) {
+                alert('金币不足！');
+                return;
+            }
+            
+            pet.coins -= item.price;
+            for (const [key, val] of Object.entries(item.effect)) {
+                pet[key] = Math.min(100, Math.max(0, (pet[key] || 50) + val));
+            }
+            
+            GitHubSync.set('data/pet.json', pet, sha).then(() => {
+                renderWith(pet);
+                renderShop();
+                alert('购买成功！');
+            });
+        });
+    }
+    
     render();
     setInterval(render, 10000);
 })();
