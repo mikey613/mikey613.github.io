@@ -4006,3 +4006,91 @@ body.season-winter { --accent: #a0c0f0; --accent-light: #b5d0f5; --accent-glow: 
 .lw-btn:hover {
     background: rgba(255,255,255,0.2);
 }
+
+/* ========== 返回顶部 ========== */
+.back-to-top {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    z-index: 998;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition);
+    backdrop-filter: blur(10px);
+}
+
+.back-to-top.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.back-to-top:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
+/* ========== 数据导出 ========== */
+.data-export-btn {
+    position: fixed;
+    bottom: 150px;
+    left: 30px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    z-index: 998;
+    transition: var(--transition);
+    backdrop-filter: blur(10px);
+}
+
+.data-export-btn:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
+/* 导航栏移动端优化 */
+@media (max-width: 768px) {
+    .back-to-top {
+        bottom: 20px;
+        left: 15px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .data-export-btn {
+        bottom: 130px;
+        left: 15px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .nav-links.open {
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--bg-deeper);
+        border-bottom: 1px solid var(--border);
+        padding: 15px;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    
+    .nav-links.open .nav-link {
+        padding: 10px 15px;
+        border-bottom: 1px solid var(--border);
+    }
+}

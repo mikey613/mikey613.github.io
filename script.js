@@ -2856,5 +2856,85 @@ window.addEventListener('load', () => {
     show();
 })();
 
+/* ========== 返回顶部 ========== */
+(function initBackToTop() {
+    const btn = document.getElementById('backToTop');
+    
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 500) {
+            btn.classList.add('show');
+        } else {
+            btn.classList.remove('show');
+        }
+    });
+    
+    btn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+})();
+
+/* ========== 数据导出备份 ========== */
+(function initDataExport() {
+    const btn = document.getElementById('dataExportBtn');
+    
+    btn.addEventListener('click', async () => {
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btn.disabled = true;
+        
+        try {
+            const files = [
+                'data/messages.json',
+                'data/todos.json',
+                'data/diary.json',
+                'data/wishes.json',
+                'data/moods.json',
+                'data/checkin.json',
+                'data/water.json',
+                'data/drawings.json',
+                'data/photos.json',
+                'data/coupons.json',
+                'data/intimacy.json',
+                'data/capsules.json',
+                'data/secrets.json',
+                'data/pet.json',
+                'data/playlist.json'
+            ];
+            
+            const backup = {};
+            for (const file of files) {
+                const remote = await GitHubSync.get(file);
+                if (remote) {
+                    backup[file] = remote.content;
+                }
+            }
+            
+            // 添加导出时间戳
+            backup._exportInfo = {
+                exportedAt: new Date().toISOString(),
+                exportedBy: AppUser.get()
+            };
+            
+            // 创建下载
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const now = new Date();
+            const dateStr = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
+            a.download = 'love-backup-' + dateStr + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert('数据已导出备份！');
+        } catch (e) {
+            console.error('Export failed:', e);
+            alert('导出失败，请重试');
+        }
+        
+        btn.innerHTML = '<i class="fas fa-download"></i>';
+        btn.disabled = false;
+    });
+})();
+
 /* ========== 初始化角色系统 ========== */
 AppUser.init();
