@@ -2825,6 +2825,7 @@ window.addEventListener('load', () => {
     
     // 本地缓存宠物数据
     let localPet = null;
+    let localSha = null;
     let lastSpeechCategory = '';
     let isUpdating = false;
     
@@ -2928,6 +2929,7 @@ window.addEventListener('load', () => {
         if (isUpdating) return; // 正在更新时不刷新
         GitHubSync.get('data/pet.json').then(remote => {
             let pet = remote ? remote.content : { mood: 50, hunger: 50, clean: 50, energy: 50, coins: 0, totalCare: 0 };
+            localSha = remote ? remote.sha : null;
             renderWith(pet);
         });
     }
@@ -2936,46 +2938,28 @@ window.addEventListener('load', () => {
         if (isUpdating) return;
         isUpdating = true;
         
-        // 立即用本地数据更新UI
-        if (localPet) {
-            for (const [key, val] of Object.entries(changes)) {
-                if (key === 'coins' || key === 'totalCare') {
-                    localPet[key] = (localPet[key] || 0) + val;
-                } else {
-                    localPet[key] = Math.min(100, Math.max(0, (localPet[key] || 50) + val));
-                }
-            }
-            if (earnCoins > 0) {
-                localPet.coins = (localPet.coins || 0) + earnCoins;
-                localPet.totalCare = (localPet.totalCare || 0) + earnCoins;
-            }
-            renderWith(localPet, true); // 点击时强制更新说话
+        // 确保有本地数据
+        if (!localPet) {
+            localPet = { mood: 50, hunger: 50, clean: 50, energy: 50, coins: 0, totalCare: 0 };
         }
         
-        // 同步到GitHub
-        GitHubSync.get('data/pet.json').then(remote => {
-            const pet = remote ? remote.content : { mood: 50, hunger: 50, clean: 50, energy: 50, coins: 0, totalCare: 0 };
-            const sha = remote ? remote.sha : null;
-            
-            // 应用变化
-            for (const [key, val] of Object.entries(changes)) {
-                if (key === 'coins' || key === 'totalCare') {
-                    pet[key] = (pet[key] || 0) + val;
-                } else {
-                    pet[key] = Math.min(100, Math.max(0, (pet[key] || 50) + val));
-                }
+        // 立即用本地数据更新UI
+        for (const [key, val] of Object.entries(changes)) {
+            if (key === 'coins' || key === 'totalCare') {
+                localPet[key] = (localPet[key] || 0) + val;
+            } else {
+                localPet[key] = Math.min(100, Math.max(0, (localPet[key] || 50) + val));
             }
-            
-            // 赚取金币
-            if (earnCoins > 0) {
-                pet.coins = (pet.coins || 0) + earnCoins;
-                pet.totalCare = (pet.totalCare || 0) + earnCoins;
-            }
-            
-            GitHubSync.set('data/pet.json', pet, sha).then(() => {
-                localPet = { ...pet };
-                isUpdating = false;
-            });
+        }
+        if (earnCoins > 0) {
+            localPet.coins = (localPet.coins || 0) + earnCoins;
+            localPet.totalCare = (localPet.totalCare || 0) + earnCoins;
+        }
+        renderWith(localPet, true); // 点击时强制更新说话
+        
+        // 直接用本地数据保存到GitHub（不再重新获取）
+        GitHubSync.set('data/pet.json', localPet, localSha).then(() => {
+            isUpdating = false;
         }).catch(() => {
             isUpdating = false;
         });
@@ -3043,25 +3027,26 @@ window.addEventListener('load', () => {
     }
     
     function buyItem(item) {
-        GitHubSync.get('data/pet.json').then(remote => {
-            const pet = remote ? remote.content : { coins: 0 };
-            const sha = remote ? remote.sha : null;
-            
-            if ((pet.coins || 0) < item.price) {
-                alert('金币不足！');
-                return;
-            }
-            
-            pet.coins -= item.price;
-            for (const [key, val] of Object.entries(item.effect)) {
-                pet[key] = Math.min(100, Math.max(0, (pet[key] || 50) + val));
-            }
-            
-            GitHubSync.set('data/pet.json', pet, sha).then(() => {
-                renderWith(pet);
-                renderShop();
-                alert('购买成功！');
-            });
+        if (!localPet) {
+            alert('数据加载中，请稍后');
+            return;
+        }
+        
+        if ((localPet.coins || 0) < item.price) {
+            alert('金币不足！');
+            return;
+        }
+        
+        // 直接用本地数据
+        localPet.coins -= item.price;
+        for (const [key, val] of Object.entries(item.effect)) {
+            localPet[key] = Math.min(100, Math.max(0, (localPet[key] || 50) + val));
+        }
+        
+        GitHubSync.set('data/pet.json', localPet, localSha).then(() => {
+            renderWith(localPet);
+            renderShop();
+            alert('购买成功！');
         });
     }
     
