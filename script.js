@@ -2572,20 +2572,24 @@ window.addEventListener('load', () => {
     const grid = document.getElementById('couponGrid');
     const createBtn = document.getElementById('couponCreateBtn');
 
+    function renderWith(coupons) {
+        grid.innerHTML = '';
+        coupons.forEach((c, i) => {
+            const div = document.createElement('div');
+            div.className = 'coupon-card';
+            const userIcon = c.user && AppUser.info(c.user) ? AppUser.info(c.user).icon : '';
+            div.innerHTML = '<div class="coupon-title">' + c.title + '</div>' +
+                '<div class="coupon-from">' + userIcon + ' 发给 ' + (c.to === 'hao' ? '文豪' : '霞霞') + '</div>' +
+                (c.redeemed ? '<div style="margin-top:8px;font-size:0.75rem;opacity:0.7;">已兑换 ✓</div>' :
+                '<button class="coupon-redeem" data-i="' + i + '">兑换</button>');
+            grid.appendChild(div);
+        });
+    }
+
     function render() {
         GitHubSync.get('data/coupons.json').then(remote => {
             const coupons = remote ? remote.content : [];
-            grid.innerHTML = '';
-            coupons.forEach((c, i) => {
-                const div = document.createElement('div');
-                div.className = 'coupon-card';
-                const userIcon = c.user && AppUser.info(c.user) ? AppUser.info(c.user).icon : '';
-                div.innerHTML = '<div class="coupon-title">' + c.title + '</div>' +
-                    '<div class="coupon-from">' + userIcon + ' 发给 ' + (c.to === 'hao' ? '文豪' : '霞霞') + '</div>' +
-                    (c.redeemed ? '<div style="margin-top:8px;font-size:0.75rem;opacity:0.7;">已兑换 ✓</div>' :
-                    '<button class="coupon-redeem" data-i="' + i + '">兑换</button>');
-                grid.appendChild(div);
-            });
+            renderWith(coupons);
         });
     }
 
@@ -2597,7 +2601,7 @@ window.addEventListener('load', () => {
             const coupons = remote ? remote.content : [];
             const sha = remote ? remote.sha : null;
             coupons.push({ title: title, to: to, user: AppUser.get(), redeemed: false });
-            GitHubSync.set('data/coupons.json', coupons, sha).then(() => render());
+            GitHubSync.set('data/coupons.json', coupons, sha).then(() => renderWith(coupons));
         });
     });
 
@@ -2609,7 +2613,7 @@ window.addEventListener('load', () => {
             const coupons = remote ? remote.content : [];
             const sha = remote ? remote.sha : null;
             coupons[i].redeemed = true;
-            GitHubSync.set('data/coupons.json', coupons, sha).then(() => render());
+            GitHubSync.set('data/coupons.json', coupons, sha).then(() => renderWith(coupons));
         });
     });
 
@@ -2624,10 +2628,14 @@ window.addEventListener('load', () => {
     const holdBtn = document.getElementById('holdBtn');
     const stats = document.getElementById('intimacyStats');
 
+    function renderWith(data) {
+        stats.innerHTML = '🤗 拥抱 ' + data.hugs + ' 次 &nbsp;&nbsp; 💋 亲亲 ' + data.kisses + ' 次 &nbsp;&nbsp; 🤝 牵手 ' + data.holds + ' 次';
+    }
+
     function render() {
         GitHubSync.get('data/intimacy.json').then(remote => {
             const data = remote ? remote.content : { hugs: 0, kisses: 0, holds: 0, date: '' };
-            stats.innerHTML = '🤗 拥抱 ' + data.hugs + ' 次 &nbsp;&nbsp; 💋 亲亲 ' + data.kisses + ' 次 &nbsp;&nbsp; 🤝 牵手 ' + data.holds + ' 次';
+            renderWith(data);
         });
     }
 
@@ -2636,7 +2644,7 @@ window.addEventListener('load', () => {
             const data = remote ? remote.content : { hugs: 0, kisses: 0, holds: 0 };
             const sha = remote ? remote.sha : null;
             data[type] = (data[type] || 0) + 1;
-            GitHubSync.set('data/intimacy.json', data, sha).then(() => render());
+            GitHubSync.set('data/intimacy.json', data, sha).then(() => renderWith(data));
         });
     }
 
@@ -2795,15 +2803,19 @@ window.addEventListener('load', () => {
     const playBtn = document.getElementById('petPlay');
     const petBtn = document.getElementById('petPet');
 
+    function renderWith(pet) {
+        moodBar.style.width = pet.mood + '%';
+        hungerBar.style.width = pet.hunger + '%';
+        if (pet.mood >= 80) avatar.textContent = '😻';
+        else if (pet.mood >= 50) avatar.textContent = '🐱';
+        else if (pet.mood >= 20) avatar.textContent = '🐣';
+        else avatar.textContent = '😿';
+    }
+
     function render() {
         GitHubSync.get('data/pet.json').then(remote => {
             let pet = remote ? remote.content : { mood: 50, hunger: 50 };
-            moodBar.style.width = pet.mood + '%';
-            hungerBar.style.width = pet.hunger + '%';
-            if (pet.mood >= 80) avatar.textContent = '😻';
-            else if (pet.mood >= 50) avatar.textContent = '🐱';
-            else if (pet.mood >= 20) avatar.textContent = '🐣';
-            else avatar.textContent = '😿';
+            renderWith(pet);
         });
     }
 
@@ -2812,7 +2824,7 @@ window.addEventListener('load', () => {
             const pet = remote ? remote.content : { mood: 50, hunger: 50 };
             const sha = remote ? remote.sha : null;
             pet[type] = Math.min(100, Math.max(0, (pet[type] || 50) + val));
-            GitHubSync.set('data/pet.json', pet, sha).then(() => render());
+            GitHubSync.set('data/pet.json', pet, sha).then(() => renderWith(pet));
         });
     }
 
@@ -2830,19 +2842,23 @@ window.addEventListener('load', () => {
     const artistInput = document.getElementById('playlistArtist');
     const addBtn = document.getElementById('playlistAddBtn');
 
+    function renderWith(songs) {
+        list.innerHTML = '';
+        songs.forEach(s => {
+            const userIcon = s.user && AppUser.info(s.user) ? AppUser.info(s.user).icon : '';
+            const div = document.createElement('div');
+            div.className = 'playlist-item';
+            div.innerHTML = '<div class="playlist-item-icon">🎵</div>' +
+                '<div class="playlist-item-info"><div class="playlist-item-name">' + s.name + '</div>' +
+                '<div class="playlist-item-artist">' + s.artist + ' ' + userIcon + '</div></div>';
+            list.appendChild(div);
+        });
+    }
+
     function render() {
         GitHubSync.get('data/playlist.json').then(remote => {
             const songs = remote ? remote.content : [];
-            list.innerHTML = '';
-            songs.forEach(s => {
-                const userIcon = s.user && AppUser.info(s.user) ? AppUser.info(s.user).icon : '';
-                const div = document.createElement('div');
-                div.className = 'playlist-item';
-                div.innerHTML = '<div class="playlist-item-icon">🎵</div>' +
-                    '<div class="playlist-item-info"><div class="playlist-item-name">' + s.name + '</div>' +
-                    '<div class="playlist-item-artist">' + s.artist + ' ' + userIcon + '</div></div>';
-                list.appendChild(div);
-            });
+            renderWith(songs);
         });
     }
 
@@ -2857,7 +2873,8 @@ window.addEventListener('load', () => {
             GitHubSync.set('data/playlist.json', songs, sha).then(() => {
                 nameInput.value = '';
                 artistInput.value = '';
-                render();
+                // 直接渲染新数据，不等待API
+                renderWith(songs);
             });
         });
     });
