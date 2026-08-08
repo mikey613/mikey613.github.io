@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>李文豪 & 叶霞 | 属于我们的星空</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=20260808">
+    <link rel="stylesheet" href="style.css?v=20260808b">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
@@ -68,6 +68,10 @@
             <a href="#diary" class="nav-link">日记</a>
             <a href="#draw" class="nav-link">画板</a>
             <a href="#photos" class="nav-link">照片</a>
+            <a href="#dailytask" class="nav-link">任务</a>
+            <a href="#coupons" class="nav-link">兑换券</a>
+            <a href="#intimacy" class="nav-link">亲密</a>
+            <a href="#pet" class="nav-link">宠物</a>
         </div>
         <button class="theme-toggle" id="themeToggle" title="切换白天/夜晚模式">
             <i class="fas fa-sun"></i>
@@ -812,6 +816,111 @@
         <div class="photo-wall" id="photoWall"></div>
     </section>
 
+    <!-- 每日任务 -->
+    <section class="section" id="dailytask">
+        <h2 class="section-title"><i class="fas fa-tasks"></i> 今日任务</h2>
+        <p class="section-subtitle">每天一个小任务，让爱情更甜蜜</p>
+        <div class="task-card" id="taskCard">
+            <div class="task-icon" id="taskIcon">💕</div>
+            <div class="task-text" id="taskText">加载中...</div>
+            <button class="task-btn" id="taskDone"><i class="fas fa-check"></i> 完成了！</button>
+            <button class="task-btn task-refresh" id="taskRefresh"><i class="fas fa-redo"></i> 换一个</button>
+        </div>
+    </section>
+
+    <!-- 爱情兑换券 -->
+    <section class="section" id="coupons">
+        <h2 class="section-title"><i class="fas fa-ticket-alt"></i> 爱情兑换券</h2>
+        <p class="section-subtitle">给TA一张券，兑换一份甜蜜</p>
+        <div class="coupon-grid" id="couponGrid"></div>
+        <button class="coupon-create-btn" id="couponCreateBtn"><i class="fas fa-plus"></i> 创建新券</button>
+    </section>
+
+    <!-- 亲密打卡 -->
+    <section class="section" id="intimacy">
+        <h2 class="section-title"><i class="fas fa-heart"></i> 亲密打卡</h2>
+        <p class="section-subtitle">记录每天的甜蜜时光</p>
+        <div class="intimacy-btns">
+            <button class="intimacy-btn hug-btn" id="hugBtn">🤗 拥抱 +1</button>
+            <button class="intimacy-btn kiss-btn" id="kissBtn">💋 亲亲 +1</button>
+            <button class="intimacy-btn hold-btn" id="holdBtn">🤝 牵手 +1</button>
+        </div>
+        <div class="intimacy-stats" id="intimacyStats"></div>
+    </section>
+
+    <!-- 时光机 -->
+    <section class="section" id="timemachine">
+        <h2 class="section-title"><i class="fas fa-clock"></i> 时光机</h2>
+        <p class="section-subtitle">去年的今天在做什么？</p>
+        <div class="tm-content" id="tmContent">
+            <div class="tm-year" id="tmYear"></div>
+            <div class="tm-entry" id="tmEntry">暂无历史记录</div>
+        </div>
+    </section>
+
+    <!-- 记忆胶囊 -->
+    <section class="section" id="capsule">
+        <h2 class="section-title"><i class="fas fa-prescription-bottle"></i> 记忆胶囊</h2>
+        <p class="section-subtitle">写一封信，未来某天打开</p>
+        <div class="capsule-list" id="capsuleList"></div>
+        <button class="capsule-create-btn" id="capsuleCreateBtn"><i class="fas fa-plus"></i> 封存新胶囊</button>
+    </section>
+
+    <!-- 秘密信箱 -->
+    <section class="section" id="secretmail">
+        <h2 class="section-title"><i class="fas fa-envelope-secret"></i> 秘密信箱</h2>
+        <p class="section-subtitle">只属于你们之间的悄悄话</p>
+        <div class="secret-compose">
+            <select id="secretTo"><option value="xia">给霞霞</option><option value="hao">给文豪</option></select>
+            <textarea id="secretContent" placeholder="写下你的悄悄话..."></textarea>
+            <button id="secretSend"><i class="fas fa-paper-plane"></i> 发送</button>
+        </div>
+        <div class="secret-inbox" id="secretInbox"></div>
+    </section>
+
+    <!-- 电子宠物 -->
+    <section class="section" id="pet">
+        <h2 class="section-title"><i class="fas fa-paw"></i> 我们的宠物</h2>
+        <p class="section-subtitle">一起照顾TA，TA会越来越开心</p>
+        <div class="pet-container">
+            <div class="pet-avatar" id="petAvatar">🐣</div>
+            <div class="pet-name" id="petName">小爱心</div>
+            <div class="pet-status">
+                <div class="pet-stat"><span>心情</span><div class="pet-bar"><div class="pet-bar-fill" id="petMood" style="width:50%"></div></div></div>
+                <div class="pet-stat"><span>饱食</span><div class="pet-bar"><div class="pet-bar-fill" id="petHunger" style="width:50%"></div></div></div>
+            </div>
+            <div class="pet-actions">
+                <button class="pet-btn" id="petFeed">🍎 喂食</button>
+                <button class="pet-btn" id="petPlay">🎾 玩耍</button>
+                <button class="pet-btn" id="petPet">🤚 摸摸</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 情侣歌单 -->
+    <section class="section" id="playlist">
+        <h2 class="section-title"><i class="fas fa-music"></i> 我们的歌单</h2>
+        <p class="section-subtitle">每首歌都是一段回忆</p>
+        <div class="playlist-list" id="playlistList"></div>
+        <div class="playlist-add">
+            <input type="text" id="playlistName" placeholder="歌名">
+            <input type="text" id="playlistArtist" placeholder="歌手">
+            <button id="playlistAddBtn"><i class="fas fa-plus"></i></button>
+        </div>
+    </section>
+
+    <!-- 爱情天气预报 -->
+    <section class="section" id="loveweather">
+        <h2 class="section-title"><i class="fas fa-cloud-sun-heart"></i> 爱情天气</h2>
+        <p class="section-subtitle">今天的爱情天气如何？</p>
+        <div class="love-weather-card" id="loveWeatherCard">
+            <div class="lw-icon" id="lwIcon">☀️</div>
+            <div class="lw-temp" id="lwTemp">37°C</div>
+            <div class="lw-desc" id="lwDesc">甜蜜高温，注意防暑！</div>
+            <button class="lw-btn" id="lwRefresh"><i class="fas fa-sync"></i> 刷新天气</button>
+        </div>
+    </section>
+
     <!-- 二维码分享 -->
     <div class="qr-widget" id="qrWidget">
         <div class="qr-toggle" id="qrToggle"><i class="fas fa-qrcode"></i></div>
@@ -984,6 +1093,6 @@
         <i class="fas fa-music"></i>
     </div>
 
-    <script src="script.js?v=20260808"></script>
+    <script src="script.js?v=20260808b"></script>
 </body>
 </html>

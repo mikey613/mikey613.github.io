@@ -2493,5 +2493,368 @@ window.addEventListener('load', () => {
     renderPhotos();
 })();
 
+/* ========== 每日任务 ========== */
+(function initDailyTask() {
+    const tasks = [
+        { icon: '💕', text: '给对方一个温暖的拥抱' },
+        { icon: '💬', text: '说一句今天最开心的事' },
+        { icon: '🎵', text: '一起听一首歌' },
+        { icon: '📸', text: '拍一张今天的合照' },
+        { icon: '🍳', text: '为TA做一顿饭' },
+        { icon: '💌', text: '写一张小纸条给TA' },
+        { icon: '🌹', text: '夸TA三个优点' },
+        { icon: '🎬', text: '一起看一部电影' },
+        { icon: '🚶', text: '一起散步30分钟' },
+        { icon: '☕', text: '给TA泡一杯茶' },
+        { icon: '💆', text: '给TA按摩5分钟' },
+        { icon: '📖', text: '分享一个有趣的故事' },
+        { icon: '🎮', text: '一起玩一个游戏' },
+        { icon: '🌙', text: '睡前说晚安+我爱你' }
+    ];
+    const iconEl = document.getElementById('taskIcon');
+    const textEl = document.getElementById('taskText');
+    const doneBtn = document.getElementById('taskDone');
+    const refreshBtn = document.getElementById('taskRefresh');
+
+    function showTask() {
+        const idx = Math.floor(Math.random() * tasks.length);
+        iconEl.textContent = tasks[idx].icon;
+        textEl.textContent = tasks[idx].text;
+    }
+
+    doneBtn.addEventListener('click', () => {
+        doneBtn.innerHTML = '<i class="fas fa-check"></i> 已完成 ✓';
+        doneBtn.style.background = 'var(--accent)';
+        doneBtn.style.color = 'white';
+    });
+
+    refreshBtn.addEventListener('click', showTask);
+    showTask();
+})();
+
+/* ========== 爱情兑换券 ========== */
+(function initCoupons() {
+    const grid = document.getElementById('couponGrid');
+    const createBtn = document.getElementById('couponCreateBtn');
+
+    function render() {
+        GitHubSync.get('data/coupons.json').then(remote => {
+            const coupons = remote ? remote.content : [];
+            grid.innerHTML = '';
+            coupons.forEach((c, i) => {
+                const div = document.createElement('div');
+                div.className = 'coupon-card';
+                const userIcon = c.user && AppUser.info(c.user) ? AppUser.info(c.user).icon : '';
+                div.innerHTML = '<div class="coupon-title">' + c.title + '</div>' +
+                    '<div class="coupon-from">' + userIcon + ' 发给 ' + (c.to === 'hao' ? '文豪' : '霞霞') + '</div>' +
+                    (c.redeemed ? '<div style="margin-top:8px;font-size:0.75rem;opacity:0.7;">已兑换 ✓</div>' :
+                    '<button class="coupon-redeem" data-i="' + i + '">兑换</button>');
+                grid.appendChild(div);
+            });
+        });
+    }
+
+    createBtn.addEventListener('click', () => {
+        const title = prompt('输入兑换券内容（如：按摩一次）');
+        if (!title) return;
+        const to = AppUser.get() === 'hao' ? 'xia' : 'hao';
+        GitHubSync.get('data/coupons.json').then(remote => {
+            const coupons = remote ? remote.content : [];
+            const sha = remote ? remote.sha : null;
+            coupons.push({ title: title, to: to, user: AppUser.get(), redeemed: false });
+            GitHubSync.set('data/coupons.json', coupons, sha).then(() => render());
+        });
+    });
+
+    grid.addEventListener('click', (e) => {
+        const btn = e.target.closest('.coupon-redeem');
+        if (!btn) return;
+        const i = parseInt(btn.dataset.i);
+        GitHubSync.get('data/coupons.json').then(remote => {
+            const coupons = remote ? remote.content : [];
+            const sha = remote ? remote.sha : null;
+            coupons[i].redeemed = true;
+            GitHubSync.set('data/coupons.json', coupons, sha).then(() => render());
+        });
+    });
+
+    render();
+})();
+
+/* ========== 亲密打卡 ========== */
+(function initIntimacy() {
+    const hugBtn = document.getElementById('hugBtn');
+    const kissBtn = document.getElementById('kissBtn');
+    const holdBtn = document.getElementById('holdBtn');
+    const stats = document.getElementById('intimacyStats');
+
+    function render() {
+        GitHubSync.get('data/intimacy.json').then(remote => {
+            const data = remote ? remote.content : { hugs: 0, kisses: 0, holds: 0, date: '' };
+            stats.innerHTML = '🤗 拥抱 ' + data.hugs + ' 次 &nbsp;&nbsp; 💋 亲亲 ' + data.kisses + ' 次 &nbsp;&nbsp; 🤝 牵手 ' + data.holds + ' 次';
+        });
+    }
+
+    function add(type) {
+        GitHubSync.get('data/intimacy.json').then(remote => {
+            const data = remote ? remote.content : { hugs: 0, kisses: 0, holds: 0 };
+            const sha = remote ? remote.sha : null;
+            data[type] = (data[type] || 0) + 1;
+            GitHubSync.set('data/intimacy.json', data, sha).then(() => render());
+        });
+    }
+
+    hugBtn.addEventListener('click', () => add('hugs'));
+    kissBtn.addEventListener('click', () => add('kisses'));
+    holdBtn.addEventListener('click', () => add('holds'));
+    render();
+})();
+
+/* ========== 时光机 ========== */
+(function initTimeMachine() {
+    const yearEl = document.getElementById('tmYear');
+    const entryEl = document.getElementById('tmEntry');
+
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+
+    GitHubSync.get('data/diary.json').then(remote => {
+        const diary = remote ? remote.content : {};
+        let found = false;
+        for (let y = now.getFullYear() - 1; y >= 2025; y--) {
+            const key = y + '-' + month + '-' + day;
+            const entry = diary[key];
+            if (entry) {
+                const text = typeof entry === 'object' ? entry.text : entry;
+                const userIcon = typeof entry === 'object' && entry.user && AppUser.info(entry.user) ? AppUser.info(entry.user).icon : '';
+                yearEl.textContent = y + '年的今天';
+                entryEl.innerHTML = userIcon + ' ' + text;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            yearEl.textContent = month + '月' + day + '日';
+            entryEl.textContent = '还没有历史记录，去日记区写一篇吧！';
+        }
+    });
+})();
+
+/* ========== 记忆胶囊 ========== */
+(function initCapsule() {
+    const list = document.getElementById('capsuleList');
+    const createBtn = document.getElementById('capsuleCreateBtn');
+
+    function render() {
+        GitHubSync.get('data/capsules.json').then(remote => {
+            const capsules = remote ? remote.content : [];
+            list.innerHTML = '';
+            capsules.forEach((c, i) => {
+                const openDate = new Date(c.openDate);
+                const now = new Date();
+                const canOpen = now >= openDate;
+                const div = document.createElement('div');
+                div.className = 'capsule-item';
+                div.innerHTML = '<div class="capsule-icon">💊</div>' +
+                    '<div class="capsule-date">封存于 ' + c.created + '</div>' +
+                    '<div class="capsule-date">' + (canOpen ? '可以打开了！' : '到 ' + c.openDate + ' 才能打开') + '</div>' +
+                    '<button class="capsule-open ' + (canOpen ? '' : 'locked') + '" data-i="' + i + '">' +
+                    (canOpen ? '打开' : '🔒 未到期') + '</button>';
+                list.appendChild(div);
+            });
+        });
+    }
+
+    createBtn.addEventListener('click', () => {
+        const content = prompt('写下想对未来的说的话：');
+        if (!content) return;
+        const days = prompt('多少天后打开？（如：30）');
+        if (!days) return;
+        const now = new Date();
+        const openDate = new Date(now.getTime() + parseInt(days) * 86400000);
+        const openStr = openDate.getFullYear() + '-' + String(openDate.getMonth() + 1).padStart(2, '0') + '-' + String(openDate.getDate()).padStart(2, '0');
+        const createdStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+
+        GitHubSync.get('data/capsules.json').then(remote => {
+            const capsules = remote ? remote.content : [];
+            const sha = remote ? remote.sha : null;
+            capsules.push({ content: content, created: createdStr, openDate: openStr, user: AppUser.get() });
+            GitHubSync.set('data/capsules.json', capsules, sha).then(() => render());
+        });
+    });
+
+    list.addEventListener('click', (e) => {
+        const btn = e.target.closest('.capsule-open');
+        if (!btn || btn.classList.contains('locked')) return;
+        const i = parseInt(btn.dataset.i);
+        GitHubSync.get('data/capsules.json').then(remote => {
+            const capsules = remote ? remote.content : [];
+            alert('💌 ' + capsules[i].content);
+        });
+    });
+
+    render();
+})();
+
+/* ========== 秘密信箱 ========== */
+(function initSecretMail() {
+    const sendBtn = document.getElementById('secretSend');
+    const inbox = document.getElementById('secretInbox');
+    const toSelect = document.getElementById('secretTo');
+    const contentArea = document.getElementById('secretContent');
+
+    function render() {
+        GitHubSync.get('data/secrets.json').then(remote => {
+            const secrets = remote ? remote.content : [];
+            const me = AppUser.get();
+            const myMail = secrets.filter(s => s.to === me);
+            inbox.innerHTML = '';
+            if (myMail.length === 0) {
+                inbox.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:20px;">还没有收到悄悄话</div>';
+                return;
+            }
+            myMail.reverse().forEach(s => {
+                const fromIcon = s.from && AppUser.info(s.from) ? AppUser.info(s.from).icon : '';
+                const div = document.createElement('div');
+                div.className = 'secret-item';
+                div.innerHTML = '<div class="secret-item-header"><span>' + fromIcon + ' 来自' + (s.from === 'hao' ? '文豪' : '霞霞') + '</span><span>' + s.time + '</span></div>' +
+                    '<div class="secret-item-content">' + s.content + '</div>';
+                inbox.appendChild(div);
+            });
+        });
+    }
+
+    sendBtn.addEventListener('click', () => {
+        const content = contentArea.value.trim();
+        if (!content) return;
+        const to = toSelect.value;
+        const now = new Date();
+        const time = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+        GitHubSync.get('data/secrets.json').then(remote => {
+            const secrets = remote ? remote.content : [];
+            const sha = remote ? remote.sha : null;
+            secrets.push({ from: AppUser.get(), to: to, content: content, time: time });
+            GitHubSync.set('data/secrets.json', secrets, sha).then(() => {
+                contentArea.value = '';
+                alert('悄悄话已发送！');
+                render();
+            });
+        });
+    });
+
+    render();
+})();
+
+/* ========== 电子宠物 ========== */
+(function initPet() {
+    const avatar = document.getElementById('petAvatar');
+    const moodBar = document.getElementById('petMood');
+    const hungerBar = document.getElementById('petHunger');
+    const feedBtn = document.getElementById('petFeed');
+    const playBtn = document.getElementById('petPlay');
+    const petBtn = document.getElementById('petPet');
+
+    function render() {
+        GitHubSync.get('data/pet.json').then(remote => {
+            let pet = remote ? remote.content : { mood: 50, hunger: 50 };
+            moodBar.style.width = pet.mood + '%';
+            hungerBar.style.width = pet.hunger + '%';
+            if (pet.mood >= 80) avatar.textContent = '😻';
+            else if (pet.mood >= 50) avatar.textContent = '🐱';
+            else if (pet.mood >= 20) avatar.textContent = '🐣';
+            else avatar.textContent = '😿';
+        });
+    }
+
+    function update(type, val) {
+        GitHubSync.get('data/pet.json').then(remote => {
+            const pet = remote ? remote.content : { mood: 50, hunger: 50 };
+            const sha = remote ? remote.sha : null;
+            pet[type] = Math.min(100, Math.max(0, (pet[type] || 50) + val));
+            GitHubSync.set('data/pet.json', pet, sha).then(() => render());
+        });
+    }
+
+    feedBtn.addEventListener('click', () => { update('hunger', 15); update('mood', 5); });
+    playBtn.addEventListener('click', () => { update('mood', 20); update('hunger', -10); });
+    petBtn.addEventListener('click', () => { update('mood', 10); });
+    render();
+})();
+
+/* ========== 情侣歌单 ========== */
+(function initPlaylist() {
+    const list = document.getElementById('playlistList');
+    const nameInput = document.getElementById('playlistName');
+    const artistInput = document.getElementById('playlistArtist');
+    const addBtn = document.getElementById('playlistAddBtn');
+
+    function render() {
+        GitHubSync.get('data/playlist.json').then(remote => {
+            const songs = remote ? remote.content : [];
+            list.innerHTML = '';
+            songs.forEach(s => {
+                const userIcon = s.user && AppUser.info(s.user) ? AppUser.info(s.user).icon : '';
+                const div = document.createElement('div');
+                div.className = 'playlist-item';
+                div.innerHTML = '<div class="playlist-item-icon">🎵</div>' +
+                    '<div class="playlist-item-info"><div class="playlist-item-name">' + s.name + '</div>' +
+                    '<div class="playlist-item-artist">' + s.artist + ' ' + userIcon + '</div></div>';
+                list.appendChild(div);
+            });
+        });
+    }
+
+    addBtn.addEventListener('click', () => {
+        const name = nameInput.value.trim();
+        const artist = artistInput.value.trim();
+        if (!name) return;
+        GitHubSync.get('data/playlist.json').then(remote => {
+            const songs = remote ? remote.content : [];
+            const sha = remote ? remote.sha : null;
+            songs.push({ name: name, artist: artist || '未知', user: AppUser.get() });
+            GitHubSync.set('data/playlist.json', songs, sha).then(() => {
+                nameInput.value = '';
+                artistInput.value = '';
+                render();
+            });
+        });
+    });
+
+    render();
+})();
+
+/* ========== 爱情天气预报 ========== */
+(function initLoveWeather() {
+    const iconEl = document.getElementById('lwIcon');
+    const tempEl = document.getElementById('lwTemp');
+    const descEl = document.getElementById('lwDesc');
+    const refreshBtn = document.getElementById('lwRefresh');
+
+    const weathers = [
+        { icon: '☀️', temp: '37°C', desc: '甜蜜高温，注意防暑！' },
+        { icon: '🌈', temp: '28°C', desc: '雨后彩虹，爱情更美好' },
+        { icon: '🌤️', temp: '25°C', desc: '温暖舒适，刚刚好' },
+        { icon: '🌸', temp: '22°C', desc: '春风拂面，浪漫满溢' },
+        { icon: '⭐', temp: '18°C', desc: '星光璀璨，适合许愿' },
+        { icon: '🌙', temp: '15°C', desc: '月色温柔，适合散步' },
+        { icon: '🔥', temp: '42°C', desc: '热恋中，温度爆表！' },
+        { icon: '💕', temp: '30°C', desc: '粉红泡泡，甜度满分' },
+        { icon: '🌊', temp: '20°C', desc: '平静温馨，细水长流' },
+        { icon: '❄️', temp: '5°C', desc: '需要更多温暖拥抱' }
+    ];
+
+    function show() {
+        const w = weathers[Math.floor(Math.random() * weathers.length)];
+        iconEl.textContent = w.icon;
+        tempEl.textContent = w.temp;
+        descEl.textContent = w.desc;
+    }
+
+    refreshBtn.addEventListener('click', show);
+    show();
+})();
+
 /* ========== 初始化角色系统 ========== */
 AppUser.init();
