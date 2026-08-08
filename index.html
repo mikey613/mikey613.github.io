@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>李文豪 & 叶霞 | 属于我们的星空</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=20260807">
+    <link rel="stylesheet" href="style.css?v=20260808">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
@@ -66,6 +66,8 @@
             <a href="#dashboard" class="nav-link">数据</a>
             <a href="#lovemap" class="nav-link">地图</a>
             <a href="#diary" class="nav-link">日记</a>
+            <a href="#draw" class="nav-link">画板</a>
+            <a href="#photos" class="nav-link">照片</a>
         </div>
         <button class="theme-toggle" id="themeToggle" title="切换白天/夜晚模式">
             <i class="fas fa-sun"></i>
@@ -780,6 +782,36 @@
         <div class="board-event" id="boardEvent">点击般子开始游戏！</div>
     </section>
 
+    <!-- 共同画板 -->
+    <section class="section" id="draw">
+        <h2 class="section-title"><i class="fas fa-palette"></i> 共同画板</h2>
+        <p class="section-subtitle">一起画画，留下我们的痕迹</p>
+        <div class="draw-container">
+            <div class="draw-toolbar">
+                <label>颜色 <input type="color" id="drawColor" value="#7c6ef0"></label>
+                <label>粗细 <input type="range" id="drawSize" min="1" max="20" value="3"></label>
+                <button class="draw-btn" id="drawClear"><i class="fas fa-trash"></i> 清空</button>
+                <button class="draw-btn draw-save" id="drawSave"><i class="fas fa-save"></i> 保存</button>
+            </div>
+            <canvas id="drawCanvas" width="800" height="500"></canvas>
+            <div class="draw-gallery" id="drawGallery">
+                <h3><i class="fas fa-images"></i> 我们的画作</h3>
+                <div class="draw-list" id="drawList"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 照片墙 -->
+    <section class="section" id="photos">
+        <h2 class="section-title"><i class="fas fa-camera"></i> 甜蜜瞬间</h2>
+        <p class="section-subtitle">记录每一个美好时刻</p>
+        <div class="photo-upload-area">
+            <input type="file" id="photoInput" accept="image/*" capture="environment" multiple style="display:none;">
+            <button class="photo-upload-btn" id="photoUploadBtn"><i class="fas fa-camera"></i> 拍照/上传照片</button>
+        </div>
+        <div class="photo-wall" id="photoWall"></div>
+    </section>
+
     <!-- 二维码分享 -->
     <div class="qr-widget" id="qrWidget">
         <div class="qr-toggle" id="qrToggle"><i class="fas fa-qrcode"></i></div>
@@ -952,6 +984,6 @@
         <i class="fas fa-music"></i>
     </div>
 
-    <script src="script.js?v=20260807"></script>
+    <script src="script.js?v=20260808"></script>
 </body>
 </html>

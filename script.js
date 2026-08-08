@@ -2277,5 +2277,221 @@ window.addEventListener('load', () => {
     })();
 })();
 
+/* ========== 共同画板 ========== */
+(function initDrawBoard() {
+    const canvas = document.getElementById('drawCanvas');
+    const ctx = canvas.getContext('2d');
+    const colorInput = document.getElementById('drawColor');
+    const sizeInput = document.getElementById('drawSize');
+    const clearBtn = document.getElementById('drawClear');
+    const saveBtn = document.getElementById('drawSave');
+    const drawList = document.getElementById('drawList');
+
+    let drawing = false;
+    let lastX = 0, lastY = 0;
+
+    // 初始化画布
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        if (e.touches) {
+            return {
+                x: (e.touches[0].clientX - rect.left) * scaleX,
+                y: (e.touches[0].clientY - rect.top) * scaleY
+            };
+        }
+        return {
+            x: (e.clientX - rect.left) * scaleX,
+            y: (e.clientY - rect.top) * scaleY
+        };
+    }
+
+    function startDraw(e) {
+        e.preventDefault();
+        drawing = true;
+        const pos = getPos(e);
+        lastX = pos.x;
+        lastY = pos.y;
+    }
+
+    function draw(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        const pos = getPos(e);
+        ctx.strokeStyle = colorInput.value;
+        ctx.lineWidth = sizeInput.value;
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        lastX = pos.x;
+        lastY = pos.y;
+    }
+
+    function stopDraw() {
+        drawing = false;
+    }
+
+    // 鼠标事件
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDraw);
+    canvas.addEventListener('mouseleave', stopDraw);
+
+    // 触摸事件
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', stopDraw);
+
+    // 清空
+    clearBtn.addEventListener('click', () => {
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    });
+
+    // 保存到 GitHub
+    saveBtn.addEventListener('click', async () => {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 保存中...';
+        
+        const dataUrl = canvas.toDataURL('image/png');
+        const base64 = dataUrl.split(',')[1];
+        const now = new Date();
+        const timeStr = now.getFullYear() + '-' +
+            String(now.getMonth() + 1).padStart(2, '0') + '-' +
+            String(now.getDate()).padStart(2, '0') + ' ' +
+            String(now.getHours()).padStart(2, '0') + ':' +
+            String(now.getMinutes()).padStart(2, '0');
+        const user = AppUser.get() || 'unknown';
+
+        try {
+            // 获取现有画作列表
+            const remote = await GitHubSync.get('data/drawings.json');
+            const drawings = remote ? remote.content : [];
+            const sha = remote ? remote.sha : null;
+
+            // 添加新画作
+            drawings.push({
+                image: base64,
+                user: user,
+                time: timeStr
+            });
+
+            // 保存到 GitHub
+            const ok = await GitHubSync.set('data/drawings.json', drawings, sha);
+            if (ok) {
+                alert('画作已保存！');
+                // 清空画布
+                ctx.fillStyle = '#1a1a2e';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                renderDrawings();
+            } else {
+                alert('保存失败，请重试');
+            }
+        } catch (e) {
+            console.error('Save drawing failed:', e);
+            alert('保存失败');
+        }
+
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-save"></i> 保存';
+    });
+
+    function renderDrawings() {
+        GitHubSync.get('data/drawings.json').then(remote => {
+            const drawings = remote ? remote.content : [];
+            drawList.innerHTML = '';
+            drawings.slice().reverse().forEach(d => {
+                const userIcon = d.user && AppUser.info(d.user) ? AppUser.info(d.user).icon : '';
+                const div = document.createElement('div');
+                div.className = 'draw-item';
+                div.innerHTML = '<img src="data:image/png;base64,' + d.image + '" alt="画作">' +
+                    '<div class="draw-item-info">' +
+                    '<span>' + userIcon + ' ' + d.time + '</span>' +
+                    '</div>';
+                drawList.appendChild(div);
+            });
+        });
+    }
+
+    renderDrawings();
+})();
+
+/* ========== 照片墙 ========== */
+(function initPhotoWall() {
+    const input = document.getElementById('photoInput');
+    const uploadBtn = document.getElementById('photoUploadBtn');
+    const wall = document.getElementById('photoWall');
+
+    uploadBtn.addEventListener('click', () => input.click());
+
+    input.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        if (!files.length) return;
+
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上传中...';
+
+        for (const file of files) {
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                const base64 = ev.target.result.split(',')[1];
+                const now = new Date();
+                const timeStr = now.getFullYear() + '-' +
+                    String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(now.getDate()).padStart(2, '0') + ' ' +
+                    String(now.getHours()).padStart(2, '0') + ':' +
+                    String(now.getMinutes()).padStart(2, '0');
+                const user = AppUser.get() || 'unknown';
+
+                // 获取现有照片
+                const remote = await GitHubSync.get('data/photos.json');
+                const photos = remote ? remote.content : [];
+                const sha = remote ? remote.sha : null;
+
+                photos.push({
+                    image: base64,
+                    user: user,
+                    time: timeStr
+                });
+
+                await GitHubSync.set('data/photos.json', photos, sha);
+                renderPhotos();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        input.value = '';
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '<i class="fas fa-camera"></i> 拍照/上传照片';
+    });
+
+    function renderPhotos() {
+        GitHubSync.get('data/photos.json').then(remote => {
+            const photos = remote ? remote.content : [];
+            wall.innerHTML = '';
+            photos.slice().reverse().forEach(p => {
+                const userIcon = p.user && AppUser.info(p.user) ? AppUser.info(p.user).icon : '';
+                const div = document.createElement('div');
+                div.className = 'photo-item';
+                div.innerHTML = '<img src="data:image/jpeg;base64,' + p.image + '" alt="照片" onclick="window.open(this.src)">' +
+                    '<div class="photo-item-info">' +
+                    '<span>' + p.time + '</span>' +
+                    (userIcon ? '<span class="data-user-tag ' + p.user + '">' + userIcon + '</span>' : '') +
+                    '</div>';
+                wall.appendChild(div);
+            });
+        });
+    }
+
+    renderPhotos();
+})();
+
 /* ========== 初始化角色系统 ========== */
 AppUser.init();
