@@ -2823,6 +2823,11 @@ window.addEventListener('load', () => {
     const cleanVal = document.getElementById('petCleanVal');
     const energyVal = document.getElementById('petEnergyVal');
     
+    // 本地缓存宠物数据
+    let localPet = null;
+    let lastSpeechCategory = '';
+    let isUpdating = false;
+    
     // 宠物说话
     const speeches = {
         happy: ['好开心呀~', '最喜欢你们了！', '今天也要开心哦~', '爱你们哟❤', '嘻嘻~'],
@@ -2869,19 +2874,16 @@ window.addEventListener('load', () => {
         return { ...evolutions[0], totalScore };
     }
     
-    function getSpeech(pet) {
-        let category = 'normal';
-        if (pet.mood >= 80 && pet.hunger >= 60) category = 'happy';
-        else if (pet.hunger < 30) category = 'hungry';
-        else if (pet.clean < 30) category = 'dirty';
-        else if (pet.energy < 30) category = 'tired';
-        else if (pet.mood < 40) category = 'sad';
-        
-        const options = speeches[category];
-        return options[Math.floor(Math.random() * options.length)];
+    function getSpeechCategory(pet) {
+        if (pet.mood >= 80 && pet.hunger >= 60) return 'happy';
+        if (pet.hunger < 30) return 'hungry';
+        if (pet.clean < 30) return 'dirty';
+        if (pet.energy < 30) return 'tired';
+        if (pet.mood < 40) return 'sad';
+        return 'normal';
     }
     
-    function renderWith(pet) {
+    function renderWith(pet, forceSpeech = false) {
         // 确保所有属性有默认值
         pet.mood = pet.mood || 50;
         pet.hunger = pet.hunger || 50;
@@ -2889,6 +2891,9 @@ window.addEventListener('load', () => {
         pet.energy = pet.energy || 50;
         pet.coins = pet.coins || 0;
         pet.totalCare = pet.totalCare || 0;
+        
+        // 保存本地缓存
+        localPet = { ...pet };
         
         // 更新状态条
         moodBar.style.width = pet.mood + '%';
@@ -2910,11 +2915,17 @@ window.addEventListener('load', () => {
         // 更新金币
         coinsEl.textContent = '💰 ' + pet.coins;
         
-        // 更新说话
-        speechEl.textContent = getSpeech(pet);
+        // 只在状态类别变化或强制时才更新说话
+        const category = getSpeechCategory(pet);
+        if (forceSpeech || category !== lastSpeechCategory) {
+            const options = speeches[category];
+            speechEl.textContent = options[Math.floor(Math.random() * options.length)];
+            lastSpeechCategory = category;
+        }
     }
     
     function render() {
+        if (isUpdating) return; // 正在更新时不刷新
         GitHubSync.get('data/pet.json').then(remote => {
             let pet = remote ? remote.content : { mood: 50, hunger: 50, clean: 50, energy: 50, coins: 0, totalCare: 0 };
             renderWith(pet);
@@ -2922,6 +2933,26 @@ window.addEventListener('load', () => {
     }
     
     function update(changes, earnCoins = 0) {
+        if (isUpdating) return;
+        isUpdating = true;
+        
+        // 立即用本地数据更新UI
+        if (localPet) {
+            for (const [key, val] of Object.entries(changes)) {
+                if (key === 'coins' || key === 'totalCare') {
+                    localPet[key] = (localPet[key] || 0) + val;
+                } else {
+                    localPet[key] = Math.min(100, Math.max(0, (localPet[key] || 50) + val));
+                }
+            }
+            if (earnCoins > 0) {
+                localPet.coins = (localPet.coins || 0) + earnCoins;
+                localPet.totalCare = (localPet.totalCare || 0) + earnCoins;
+            }
+            renderWith(localPet, true); // 点击时强制更新说话
+        }
+        
+        // 同步到GitHub
         GitHubSync.get('data/pet.json').then(remote => {
             const pet = remote ? remote.content : { mood: 50, hunger: 50, clean: 50, energy: 50, coins: 0, totalCare: 0 };
             const sha = remote ? remote.sha : null;
@@ -2941,7 +2972,12 @@ window.addEventListener('load', () => {
                 pet.totalCare = (pet.totalCare || 0) + earnCoins;
             }
             
-            GitHubSync.set('data/pet.json', pet, sha).then(() => renderWith(pet));
+            GitHubSync.set('data/pet.json', pet, sha).then(() => {
+                localPet = { ...pet };
+                isUpdating = false;
+            });
+        }).catch(() => {
+            isUpdating = false;
         });
     }
     
