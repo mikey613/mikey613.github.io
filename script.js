@@ -2421,6 +2421,8 @@ window.addEventListener('load', () => {
     }
 
     renderDrawings();
+    // 每10秒自动刷新
+    setInterval(renderDrawings, 10000);
 })();
 
 /* ========== 照片墙 ========== */
@@ -2522,6 +2524,8 @@ window.addEventListener('load', () => {
     }
 
     renderPhotos();
+    // 每10秒自动刷新
+    setInterval(renderPhotos, 10000);
 })();
 
 /* ========== 每日任务 ========== */
@@ -2610,6 +2614,7 @@ window.addEventListener('load', () => {
     });
 
     render();
+    setInterval(render, 10000);
 })();
 
 /* ========== 亲密打卡 ========== */
@@ -2639,6 +2644,7 @@ window.addEventListener('load', () => {
     kissBtn.addEventListener('click', () => add('kisses'));
     holdBtn.addEventListener('click', () => add('holds'));
     render();
+    setInterval(render, 10000);
 })();
 
 /* ========== 时光机 ========== */
@@ -2726,6 +2732,7 @@ window.addEventListener('load', () => {
     });
 
     render();
+    setInterval(render, 10000);
 })();
 
 /* ========== 秘密信箱 ========== */
@@ -2776,6 +2783,7 @@ window.addEventListener('load', () => {
     });
 
     render();
+    setInterval(render, 10000);
 })();
 
 /* ========== 电子宠物 ========== */
@@ -2812,6 +2820,7 @@ window.addEventListener('load', () => {
     playBtn.addEventListener('click', () => { update('mood', 20); update('hunger', -10); });
     petBtn.addEventListener('click', () => { update('mood', 10); });
     render();
+    setInterval(render, 10000);
 })();
 
 /* ========== 情侣歌单 ========== */
@@ -2854,6 +2863,7 @@ window.addEventListener('load', () => {
     });
 
     render();
+    setInterval(render, 10000);
 })();
 
 /* ========== 爱情天气预报 ========== */
