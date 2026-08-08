@@ -231,9 +231,23 @@ const AppUser = (function() {
         navLinks.classList.toggle('open');
     });
 
+    // 导航链接点击事件
     links.forEach(link => {
-        link.addEventListener('click', () => {
-            navLinks.classList.remove('open');
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = link.getAttribute('href');
+            const targetEl = document.querySelector(targetId);
+            if (targetEl) {
+                // 关闭菜单
+                navLinks.classList.remove('open');
+                // 平滑滚动
+                setTimeout(() => {
+                    window.scrollTo({
+                        top: targetEl.offsetTop - 70,
+                        behavior: 'smooth'
+                    });
+                }, 100);
+            }
         });
     });
 })();

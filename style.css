@@ -990,19 +990,35 @@ input, textarea, [contenteditable] {
 @media (max-width: 768px) {
     .nav-links {
         display: none;
-        position: absolute;
-        top: 100%;
+        position: fixed;
+        top: 70px;
         left: 0;
         right: 0;
-        background: rgba(10, 14, 39, 0.95);
+        bottom: 0;
+        background: rgba(10, 14, 39, 0.98);
         flex-direction: column;
         padding: 20px;
-        gap: 15px;
-        border-bottom: 1px solid var(--border);
+        gap: 0;
+        z-index: 9999;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .nav-links.open {
         display: flex;
+    }
+    
+    .nav-links .nav-link {
+        padding: 18px 20px;
+        font-size: 1.1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .nav-links .nav-link:active {
+        background: rgba(124, 110, 240, 0.2);
     }
 
     .nav-toggle {
@@ -4074,23 +4090,5 @@ body.season-winter { --accent: #a0c0f0; --accent-light: #b5d0f5; --accent-glow: 
         left: 15px;
         width: 40px;
         height: 40px;
-    }
-    
-    .nav-links.open {
-        flex-direction: column;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: var(--bg-deeper);
-        border-bottom: 1px solid var(--border);
-        padding: 15px;
-        max-height: 70vh;
-        overflow-y: auto;
-    }
-    
-    .nav-links.open .nav-link {
-        padding: 10px 15px;
-        border-bottom: 1px solid var(--border);
     }
 }
