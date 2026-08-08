@@ -4010,7 +4010,7 @@ body.season-winter { --accent: #a0c0f0; --accent-light: #b5d0f5; --accent-glow: 
 /* ========== 返回顶部 ========== */
 .back-to-top {
     position: fixed;
-    bottom: 30px;
+    top: 140px;
     left: 30px;
     width: 44px;
     height: 44px;
@@ -4063,7 +4063,7 @@ body.season-winter { --accent: #a0c0f0; --accent-light: #b5d0f5; --accent-glow: 
 /* 导航栏移动端优化 */
 @media (max-width: 768px) {
     .back-to-top {
-        bottom: 20px;
+        top: 130px;
         left: 15px;
         width: 40px;
         height: 40px;

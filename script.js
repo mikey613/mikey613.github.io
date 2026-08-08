@@ -2436,41 +2436,72 @@ window.addEventListener('load', () => {
         if (!files.length) return;
 
         uploadBtn.disabled = true;
-        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上传中...';
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
 
         for (const file of files) {
-            const reader = new FileReader();
-            reader.onload = async (ev) => {
-                const base64 = ev.target.result.split(',')[1];
-                const now = new Date();
-                const timeStr = now.getFullYear() + '-' +
-                    String(now.getMonth() + 1).padStart(2, '0') + '-' +
-                    String(now.getDate()).padStart(2, '0') + ' ' +
-                    String(now.getHours()).padStart(2, '0') + ':' +
-                    String(now.getMinutes()).padStart(2, '0');
-                const user = AppUser.get() || 'unknown';
+            // 压缩图片
+            const compressed = await compressImage(file, 800, 0.7);
+            const base64 = compressed.split(',')[1];
+            const now = new Date();
+            const timeStr = now.getFullYear() + '-' +
+                String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                String(now.getDate()).padStart(2, '0') + ' ' +
+                String(now.getHours()).padStart(2, '0') + ':' +
+                String(now.getMinutes()).padStart(2, '0');
+            const user = AppUser.get() || 'unknown';
 
-                // 获取现有照片
-                const remote = await GitHubSync.get('data/photos.json');
-                const photos = remote ? remote.content : [];
-                const sha = remote ? remote.sha : null;
+            // 获取现有照片
+            const remote = await GitHubSync.get('data/photos.json');
+            const photos = remote ? remote.content : [];
+            const sha = remote ? remote.sha : null;
 
-                photos.push({
-                    image: base64,
-                    user: user,
-                    time: timeStr
-                });
+            photos.push({
+                image: base64,
+                user: user,
+                time: timeStr
+            });
 
-                await GitHubSync.set('data/photos.json', photos, sha);
+            const ok = await GitHubSync.set('data/photos.json', photos, sha);
+            if (ok) {
                 renderPhotos();
-            };
-            reader.readAsDataURL(file);
+            } else {
+                alert('上传失败，请重试');
+            }
         }
 
         input.value = '';
         uploadBtn.disabled = false;
         uploadBtn.innerHTML = '<i class="fas fa-camera"></i> 拍照/上传照片';
     });
+
+    // 图片压缩函数
+    function compressImage(file, maxWidth, quality) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 
     function renderPhotos() {
         GitHubSync.get('data/photos.json').then(remote => {
