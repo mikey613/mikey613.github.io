@@ -1,17 +1,20 @@
-/* ========== 共同日记（改进版） ========== */
+/* ========== 共同日记（支持一天多条） ========== */
 (function initDiary() {
     const calendar = document.getElementById('diaryCalendar');
     const dateInput = document.getElementById('diaryDate');
     const textInput = document.getElementById('diaryText');
     const submitBtn = document.getElementById('diarySubmit');
-    let diaryData = {};
+    let diaryData = {}; // date -> [entries]
     let currentYear = new Date().getFullYear();
     let currentMonth = new Date().getMonth();
 
     async function loadDiary() {
         const entries = await DataSync.getList('diary');
         diaryData = {};
-        entries.forEach(e => { diaryData[e.date] = { text: e.text, user: e.user_role, id: e.id }; });
+        entries.forEach(e => {
+            if (!diaryData[e.date]) diaryData[e.date] = [];
+            diaryData[e.date].push({ text: e.text, user: e.user_role, id: e.id, time: e.created_at });
+        });
         renderCalendar();
     }
 
@@ -45,14 +48,25 @@
         // 日期格
         for (let d = 1; d <= daysInMonth; d++) {
             const dateStr = currentYear + '-' + String(currentMonth + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-            const entry = diaryData[dateStr];
-            const hasEntry = entry ? 'has-entry' : '';
+            const entries = diaryData[dateStr];
+            const hasEntry = entries && entries.length > 0 ? 'has-entry' : '';
             const isToday = (isCurrentMonth && d === todayDate) ? 'today' : '';
-            const userIcon = entry && entry.user && AppUser.info(entry.user) ? AppUser.info(entry.user).icon : '';
+            const entryCount = entries ? entries.length : 0;
+            
+            // 显示所有作者的图标
+            let iconsHtml = '';
+            if (entries) {
+                const users = [...new Set(entries.map(e => e.user).filter(Boolean))];
+                users.slice(0, 3).forEach(user => {
+                    const info = AppUser.info(user);
+                    if (info) iconsHtml += '<span class="diary-day-icon">' + info.icon + '</span>';
+                });
+            }
             
             html += `<div class="diary-day ${hasEntry} ${isToday}" data-date="${dateStr}">
                 <span class="diary-day-num">${d}</span>
-                ${userIcon ? '<span class="diary-day-icon">' + userIcon + '</span>' : ''}
+                <div class="diary-day-icons">${iconsHtml}</div>
+                ${entryCount > 1 ? '<span class="diary-day-count">+' + entryCount + '</span>' : ''}
             </div>`;
         }
 
@@ -74,9 +88,9 @@
         calendar.querySelectorAll('.diary-day[data-date]').forEach(el => {
             el.addEventListener('click', () => {
                 const date = el.dataset.date;
-                const entry = diaryData[date];
-                if (entry) {
-                    showDiaryDetail(date, entry);
+                const entries = diaryData[date];
+                if (entries && entries.length > 0) {
+                    showDiaryDetail(date, entries);
                 } else {
                     // 自动填充日期
                     dateInput.value = date;
@@ -86,10 +100,7 @@
         });
     }
 
-    function showDiaryDetail(date, entry) {
-        const userIcon = entry.user && AppUser.info(entry.user) ? AppUser.info(entry.user).icon : '📝';
-        const userName = entry.user && AppUser.info(entry.user) ? AppUser.info(entry.user).name : '未知';
-        
+    function showDiaryDetail(date, entries) {
         // 创建或获取弹窗
         let modal = document.getElementById('diaryDetailModal');
         if (!modal) {
@@ -99,16 +110,39 @@
             document.body.appendChild(modal);
         }
         
+        // 按时间排序（最新的在前）
+        const sortedEntries = [...entries].sort((a, b) => {
+            if (!a.time) return 1;
+            if (!b.time) return -1;
+            return new Date(b.time) - new Date(a.time);
+        });
+        
+        let entriesHtml = sortedEntries.map((entry, idx) => {
+            const userIcon = entry.user && AppUser.info(entry.user) ? AppUser.info(entry.user).icon : '📝';
+            const userName = entry.user && AppUser.info(entry.user) ? AppUser.info(entry.user).name : '未知';
+            const timeStr = entry.time ? new Date(entry.time).toLocaleString('zh-CN') : '';
+            
+            return `
+                <div class="diary-detail-entry">
+                    <div class="diary-detail-entry-header">
+                        <span class="diary-detail-user">${userIcon} ${userName}</span>
+                        <span class="diary-detail-time">${timeStr}</span>
+                    </div>
+                    <div class="diary-detail-text">${entry.text}</div>
+                </div>
+            `;
+        }).join('');
+        
         modal.innerHTML = `
             <div class="diary-detail-overlay"></div>
             <div class="diary-detail-content">
                 <div class="diary-detail-header">
                     <span class="diary-detail-date">${date}</span>
+                    <span class="diary-detail-count">${entries.length} 条日记</span>
                     <button class="diary-detail-close">&times;</button>
                 </div>
                 <div class="diary-detail-body">
-                    <div class="diary-detail-user">${userIcon} ${userName}</div>
-                    <div class="diary-detail-text">${entry.text}</div>
+                    ${entriesHtml}
                 </div>
             </div>
         `;
@@ -132,17 +166,12 @@
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         
-        // 检查是否已存在
-        const existing = Object.values(diaryData).find(e => {
-            const entryDate = date;
-            return diaryData[entryDate];
+        // 总是添加新条目（不覆盖）
+        await DataSync.add('diary', { 
+            date: date, 
+            text: text, 
+            user_role: AppUser.get() || 'unknown' 
         });
-        
-        if (diaryData[date]) {
-            await DataSync.update('diary', diaryData[date].id, { text: text, user_role: AppUser.get() || 'unknown' });
-        } else {
-            await DataSync.add('diary', { date: date, text: text, user_role: AppUser.get() || 'unknown' });
-        }
         
         textInput.value = '';
         submitBtn.disabled = false;

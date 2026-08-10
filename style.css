@@ -2545,9 +2545,24 @@ body.day-mode .counter-num {
     font-weight: 500;
 }
 
+.diary-day-icons {
+    display: flex;
+    gap: 2px;
+    justify-content: center;
+}
+
 .diary-day-icon {
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     opacity: 0.8;
+}
+
+.diary-day-count {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 0.5rem;
+    color: var(--pink);
+    font-weight: 700;
 }
 
 .diary-day.has-entry {
@@ -2660,13 +2675,50 @@ body.day-mode .counter-num {
     transform: rotate(90deg);
 }
 
+.diary-detail-count {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    background: rgba(167, 139, 250, 0.2);
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.diary-detail-body {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.diary-detail-entry {
+    padding: 15px;
+    margin-bottom: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.diary-detail-entry:last-child {
+    margin-bottom: 0;
+}
+
+.diary-detail-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.diary-detail-time {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
 .diary-detail-user {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     color: var(--text-secondary);
-    font-size: 0.9rem;
-    margin-bottom: 15px;
+    font-size: 0.85rem;
 }
 
 .diary-detail-text {
