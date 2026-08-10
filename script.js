@@ -930,12 +930,8 @@ window.addEventListener('load', () => {
         });
 })();
 
-/* ========== 嘉宾留言板（双模式：GitHub 持久化 + localStorage 备用） ========== */
+/* ========== 嘉宾留言板（Supabase 持久化） ========== */
 (function initGuestbook() {
-    // 使用全局 GITHUB_REPO 和 GITHUB_TOKEN
-    const useGitHub = GitHubSync.enabled;
-    const STORAGE_KEY = 'love-guestbook-local';
-
     const gbList = document.getElementById('gbList');
     const gbLoading = document.getElementById('gbLoading');
     const gbName = document.getElementById('gbName');
@@ -943,55 +939,17 @@ window.addEventListener('load', () => {
     const submitBtn = document.getElementById('submitGb');
     const gbStatus = document.getElementById('gbStatus');
 
-    // 初始化提示
-    if (!useGitHub) {
-        showStatus('当前为本地模式，留言仅自己可见。配置 GitHub Token 后可永久保存并所有人可见。', 'info');
-    }
-
-    // ===== 数据加载 =====
-    let _msgSha = null;
-
+    // 加载留言
     async function loadMessages() {
-        if (useGitHub) {
-            // GitHub 模式：通过 GitHubSync 读取
-            try {
-                const remote = await GitHubSync.get('data/messages.json');
-                if (remote) {
-                    _msgSha = remote.sha;
-                    renderMessages(remote.content);
-                } else {
-                    // 回退到直接 fetch
-                    const resp = await fetch('data/messages.json?t=' + Date.now());
-                    const messages = resp.ok ? await resp.json() : [];
-                    renderMessages(messages);
-                }
-            } catch (e) {
-                gbLoading.innerHTML = '<i class="fas fa-exclamation-circle"></i> 加载失败，请刷新重试';
-            }
-        } else {
-            // 本地模式：从 localStorage 读取 + 合并预设数据
-            try {
-                const resp = await fetch('data/messages.json');
-                const preset = resp.ok ? await resp.json() : [];
-                const local = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-                const all = mergeMessages(preset, local);
-                renderMessages(all);
-            } catch (e) {
-                const local = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-                renderMessages(local);
-            }
+        try {
+            const messages = await DataSync.getList('messages', 'id.desc');
+            renderMessages(messages);
+        } catch (e) {
+            gbLoading.innerHTML = '<i class="fas fa-exclamation-circle"></i> 加载失败，请刷新重试';
         }
     }
 
-    // 合并消息（按时间去重）
-    function mergeMessages(preset, local) {
-        const map = new Map();
-        preset.forEach(m => map.set(m.name + m.time, m));
-        local.forEach(m => map.set(m.name + m.time, m));
-        return Array.from(map.values());
-    }
-
-    // ===== 渲染留言列表 =====
+    // 渲染留言列表
     function renderMessages(messages) {
         gbLoading.style.display = 'none';
 
@@ -1000,103 +958,63 @@ window.addEventListener('load', () => {
             return;
         }
 
-        const modeTag = useGitHub
-            ? ''
-            : '<div style="text-align:center;margin-bottom:10px;font-size:0.8rem;color:var(--text-secondary);opacity:0.7;">💾 本地模式（仅自己可见）</div>';
+        let html = '<div class="gb-count">共 <span>' + messages.length + '</span> 条祝福</div>';
 
-        let html = modeTag + '<div class="gb-count">共 <span>' + messages.length + '</span> 条祝福</div>';
-
-        // 倒序显示，最新的在前面
-        const sorted = [...messages].reverse();
-        sorted.forEach(msg => {
-            const userIcon = msg.user && AppUser.info(msg.user) ? AppUser.info(msg.user).icon : '';
+        messages.forEach(m => {
+            const userIcon = m.user_role && AppUser.info(m.user_role) ? AppUser.info(m.user_role).icon : '💌';
             html += '<div class="gb-item">' +
                 '<div class="gb-item-header">' +
-                    '<span class="gb-item-name">' + escapeHtml(msg.name) + '</span>' +
-                    (userIcon ? '<span class="data-user-tag ' + msg.user + '">' + userIcon + '</span>' : '') +
-                    '<span class="gb-item-time">' + escapeHtml(msg.time) + '</span>' +
+                '<span class="gb-name">' + userIcon + ' ' + escapeHtml(m.name || '匿名') + '</span>' +
+                '<span class="gb-time">' + (m.time || '') + '</span>' +
                 '</div>' +
-                '<div class="gb-item-message">' + escapeHtml(msg.message) + '</div>' +
-            '</div>';
+                '<div class="gb-message">' + escapeHtml(m.message || '') + '</div>' +
+                '</div>';
         });
 
         gbList.innerHTML = html;
     }
 
-    // ===== 提交留言 =====
+    // 提交留言
     async function submitMessage() {
-        const name = gbName.value.trim();
+        const name = gbName.value.trim() || '匿名';
         const message = gbMessage.value.trim();
-
-        if (!name) { showStatus('请输入你的姓名', 'error'); return; }
-        if (!message) { showStatus('请输入祝福内容', 'error'); return; }
+        if (!message) {
+            showStatus('请输入祝福内容~', 'error');
+            return;
+        }
 
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 发送中...';
 
-        if (useGitHub) {
-            await submitToGitHub(name, message);
-        } else {
-            submitToLocal(name, message);
-        }
-
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 发送祝福';
-    }
-
-    // GitHub 提交（直接通过 Contents API）
-    async function submitToGitHub(name, message) {
-        showStatus('正在提交到 GitHub...', 'info');
         try {
-            // 先读取当前数据
-            const remote = await GitHubSync.get('data/messages.json');
-            const messages = remote ? remote.content : [];
-            const sha = remote ? remote.sha : null;
-
-            // 添加新留言
             const now = new Date();
             const time = now.getFullYear() + '-' +
                 String(now.getMonth() + 1).padStart(2, '0') + '-' +
                 String(now.getDate()).padStart(2, '0') + ' ' +
                 String(now.getHours()).padStart(2, '0') + ':' +
                 String(now.getMinutes()).padStart(2, '0');
-            messages.push({ name, message, time, user: AppUser.get() || 'guest' });
 
-            // 写回 GitHub
-            const ok = await GitHubSync.set('data/messages.json', messages, sha);
-            if (ok) {
+            const result = await DataSync.add('messages', {
+                name: name,
+                message: message,
+                time: time,
+                user_role: AppUser.get() || 'guest'
+            });
+
+            if (result) {
                 showStatus('祝福已发送！所有人可见 💕', 'success');
                 gbName.value = '';
                 gbMessage.value = '';
-                renderMessages(messages);
+                loadMessages(); // 重新加载
             } else {
                 throw new Error('写入失败');
             }
         } catch (e) {
-            showStatus('提交失败: ' + e.message + '，已保存到本地', 'error');
-            submitToLocal(name, message);
+            showStatus('提交失败: ' + e.message, 'error');
         }
-    }
 
-    // 本地提交
-    function submitToLocal(name, message) {
-        const local = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        const now = new Date();
-        const time = now.getFullYear() + '-' +
-            String(now.getMonth() + 1).padStart(2, '0') + '-' +
-            String(now.getDate()).padStart(2, '0') + ' ' +
-            String(now.getHours()).padStart(2, '0') + ':' +
-            String(now.getMinutes()).padStart(2, '0');
-
-        local.push({ name, message, time });
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(local));
-
-        gbName.value = '';
-        gbMessage.value = '';
-        showStatus('祝福已保存！当前为本地模式，仅自己可见 ✓', 'success');
-
-        // 重新加载显示
-        setTimeout(loadMessages, 300);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 发送祝福';
     }
 
     function showStatus(text, type) {
@@ -1118,6 +1036,11 @@ window.addEventListener('load', () => {
 
     // 初始加载
     loadMessages();
+    
+    // 实时订阅
+    DataSync.subscribe('messages', () => {
+        loadMessages();
+    });
 })();
 
 /* ========== 鼠标拖尾爱心（移动端禁用） ========== */
