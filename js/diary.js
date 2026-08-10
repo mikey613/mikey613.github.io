@@ -161,22 +161,38 @@
     submitBtn.addEventListener('click', async () => {
         const date = dateInput.value;
         const text = textInput.value.trim();
-        if (!date || !text) return;
+        if (!date || !text) {
+            alert('请选择日期并输入内容');
+            return;
+        }
         
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         
-        // 总是添加新条目（不覆盖）
-        await DataSync.add('diary', { 
-            date: date, 
-            text: text, 
-            user_role: AppUser.get() || 'unknown' 
-        });
-        
-        textInput.value = '';
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-pen"></i>';
-        loadDiary();
+        try {
+            // 总是添加新条目（不覆盖）
+            const result = await DataSync.add('diary', { 
+                date: date, 
+                text: text, 
+                user_role: AppUser.get() || 'unknown' 
+            });
+            
+            if (result) {
+                textInput.value = '';
+                textInput.focus();
+                console.log('[Diary] 日记添加成功:', result);
+            } else {
+                console.error('[Diary] 日记添加失败');
+                alert('保存失败，请重试');
+            }
+        } catch (e) {
+            console.error('[Diary] 提交异常:', e);
+            alert('保存失败: ' + e.message);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-pen"></i>';
+            loadDiary();
+        }
     });
 
     const now = new Date();
