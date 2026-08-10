@@ -538,60 +538,39 @@ const AppUser = (function() {
     const wishInput = document.getElementById('wishInput');
     const addBtn = document.getElementById('addWish');
     const wall = document.getElementById('wishesWall');
-    const KEY = 'love-wishes';
-    let _sha = null;
 
-    function getWishes() {
-        return JSON.parse(localStorage.getItem(KEY) || '[]');
+    async function loadWishes() {
+        const wishes = await DataSync.getList('wishes');
+        renderAll(wishes);
     }
 
-    function saveLocal(wishes) {
-        localStorage.setItem(KEY, JSON.stringify(wishes));
-    }
-
-    async function pushToGitHub(wishes) {
-        const ok = await GitHubSync.set('data/wishes.json', wishes, _sha);
-        if (ok) {
-            const fresh = await GitHubSync.get('data/wishes.json');
-            if (fresh) _sha = fresh.sha;
-        }
-    }
-
-    function save(wishes) {
-        saveLocal(wishes);
-        pushToGitHub(wishes);
+    function renderAll(wishes) {
+        wall.innerHTML = '';
+        wishes.forEach(renderWish);
     }
 
     function renderWish(wish) {
         const el = document.createElement('div');
         el.className = 'wish-star';
-        el.style.top = wish.top + '%';
-        el.style.left = wish.left + '%';
-        el.style.animationDelay = wish.delay + 's';
-        const userIcon = wish.user && AppUser.info(wish.user) ? AppUser.info(wish.user).icon : '';
+        el.style.top = (wish.top_pos || Math.random() * 80 + 5) + '%';
+        el.style.left = (wish.left_pos || Math.random() * 75 + 5) + '%';
+        el.style.animationDelay = (wish.delay || Math.random() * 2) + 's';
+        const userIcon = wish.user_role && AppUser.info(wish.user_role) ? AppUser.info(wish.user_role).icon : '';
         el.innerHTML = '<span>' + wish.text + (userIcon ? ' <small>' + userIcon + '</small>' : '') + '</span>';
         wall.appendChild(el);
     }
 
-    function renderAll() {
-        wall.innerHTML = '';
-        getWishes().forEach(renderWish);
-    }
-
-    addBtn.addEventListener('click', () => {
+    addBtn.addEventListener('click', async () => {
         const text = wishInput.value.trim();
         if (!text) return;
-        const wish = {
+        await DataSync.add('wishes', {
             text: text,
-            top: Math.random() * 80 + 5,
-            left: Math.random() * 75 + 5,
+            top_pos: Math.random() * 80 + 5,
+            left_pos: Math.random() * 75 + 5,
             delay: Math.random() * 2,
-            user: AppUser.get() || 'unknown'
-        };
-        const wishes = getWishes();
-        wishes.push(wish);
-        save(wishes);
-        renderWish(wish);
+            user_role: AppUser.get() || 'unknown'
+        });
+        loadWishes();
         wishInput.value = '';
     });
 
@@ -599,15 +578,10 @@ const AppUser = (function() {
         if (e.key === 'Enter') addBtn.click();
     });
 
-    // 初始化：从 GitHub 拉取
-    (async () => {
-        const remote = await GitHubSync.get('data/wishes.json');
-        if (remote) {
-            _sha = remote.sha;
-            saveLocal(remote.content);
-        }
-        renderAll();
-    })();
+    // 初始化
+    loadWishes();
+    // 实时订阅
+    DataSync.subscribe('wishes', () => loadWishes());
 })();
 
 /* ========== 音乐按钮（占位） ========== */
@@ -1445,32 +1419,16 @@ window.addEventListener('load', () => {
     const dateInput = document.getElementById('diaryDate');
     const textInput = document.getElementById('diaryText');
     const submitBtn = document.getElementById('diarySubmit');
-    const STORAGE_KEY = 'love-diary';
-    let _sha = null;
+    let diaryData = {};
 
-    function getDiary() {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    }
-
-    function saveLocal(diary) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(diary));
-    }
-
-    async function pushToGitHub(diary) {
-        const ok = await GitHubSync.set('data/diary.json', diary, _sha);
-        if (ok) {
-            const fresh = await GitHubSync.get('data/diary.json');
-            if (fresh) _sha = fresh.sha;
-        }
-    }
-
-    function save(diary) {
-        saveLocal(diary);
-        pushToGitHub(diary);
+    async function loadDiary() {
+        const entries = await DataSync.getList('diary');
+        diaryData = {};
+        entries.forEach(e => { diaryData[e.date] = { text: e.text, user: e.user_role }; });
+        renderCalendar();
     }
 
     function renderCalendar() {
-        const diary = getDiary();
         const now = new Date();
         const year = now.getFullYear();
         const month = now.getMonth();
@@ -1487,11 +1445,11 @@ window.addEventListener('load', () => {
         }
         for (let d = 1; d <= daysInMonth; d++) {
             const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-            const entry = diary[dateStr];
+            const entry = diaryData[dateStr];
             const hasEntry = entry ? 'has-entry' : '';
             const isToday = d === today ? 'today' : '';
-            const entryText = typeof entry === 'object' ? entry.text : (entry || '');
-            const entryUser = typeof entry === 'object' && entry.user ? entry.user : '';
+            const entryText = entry ? entry.text : '';
+            const entryUser = entry ? entry.user : '';
             const userIcon = entryUser && AppUser.info(entryUser) ? AppUser.info(entryUser).icon : '';
             const tooltip = entryText + (userIcon ? ' (' + userIcon + ')' : '');
             html += '<div class="diary-day ' + hasEntry + ' ' + isToday + '" title="' + tooltip + '">' + d + '</div>';
@@ -1499,29 +1457,29 @@ window.addEventListener('load', () => {
         calendar.innerHTML = html;
     }
 
-    submitBtn.addEventListener('click', () => {
+    submitBtn.addEventListener('click', async () => {
         const date = dateInput.value;
         const text = textInput.value.trim();
         if (!date || !text) return;
-        const diary = getDiary();
-        diary[date] = { text: text, user: AppUser.get() || 'unknown' };
-        save(diary);
+        // 检查是否已存在
+        const existing = await DataSync.getList('diary');
+        const found = existing.find(e => e.date === date);
+        if (found) {
+            await DataSync.update('diary', found.id, { text: text, user_role: AppUser.get() || 'unknown' });
+        } else {
+            await DataSync.add('diary', { date: date, text: text, user_role: AppUser.get() || 'unknown' });
+        }
         textInput.value = '';
-        renderCalendar();
+        loadDiary();
     });
 
     const now = new Date();
     dateInput.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
 
-    // 初始化：从 GitHub 拉取
-    (async () => {
-        const remote = await GitHubSync.get('data/diary.json');
-        if (remote) {
-            _sha = remote.sha;
-            saveLocal(remote.content);
-        }
-        renderCalendar();
-    })();
+    // 初始化
+    loadDiary();
+    // 实时订阅
+    DataSync.subscribe('diary', () => loadDiary());
 })();
 
 /* ========== 照片对比滑块 ========== */
@@ -1948,129 +1906,86 @@ window.addEventListener('load', () => {
     }
 })();
 
-/* ========== 共享待办（远程同步） ========== */
+/* ========== 共享待办（Supabase 同步） ========== */
 (function initTodo() {
     const input = document.getElementById('todoInput');
     const addBtn = document.getElementById('todoAdd');
     const list = document.getElementById('todoList');
-    const KEY = 'love-todos';
-    let _sha = null;
 
-    function getTodos() {
-        return JSON.parse(localStorage.getItem(KEY) || '[]');
+    async function loadTodos() {
+        const todos = await DataSync.getList('todos');
+        render(todos);
     }
 
-    function saveLocal(todos) {
-        localStorage.setItem(KEY, JSON.stringify(todos));
-    }
-
-    async function pushToGitHub(todos) {
-        const ok = await GitHubSync.set('data/todos.json', todos, _sha);
-        if (ok) {
-            const fresh = await GitHubSync.get('data/todos.json');
-            if (fresh) _sha = fresh.sha;
-        }
-    }
-
-    function save(todos) {
-        saveLocal(todos);
-        pushToGitHub(todos);
-    }
-
-    function render() {
-        const todos = getTodos();
+    function render(todos) {
         list.innerHTML = '';
-        todos.forEach((t, i) => {
+        todos.forEach((t) => {
             const li = document.createElement('li');
             li.className = t.done ? 'done' : '';
-            const userTag = t.user ? '<span class="data-user-tag ' + t.user + '">' + (AppUser.info(t.user) ? AppUser.info(t.user).icon : '') + '</span>' : '';
+            const userTag = t.user_role ? '<span class="data-user-tag ' + t.user_role + '">' + (AppUser.info(t.user_role) ? AppUser.info(t.user_role).icon : '') + '</span>' : '';
             li.innerHTML =
-                '<span class="todo-check" data-i="' + i + '">\u2713</span>' +
+                '<span class="todo-check" data-id="' + t.id + '">\u2713</span>' +
                 '<span>' + t.text + '</span>' +
                 userTag +
-                '<span class="todo-del" data-i="' + i + '"><i class="fas fa-times"></i></span>';
+                '<span class="todo-del" data-id="' + t.id + '"><i class="fas fa-times"></i></span>';
             list.appendChild(li);
         });
     }
 
-    addBtn.addEventListener('click', () => {
+    addBtn.addEventListener('click', async () => {
         const text = input.value.trim();
         if (!text) return;
-        const todos = getTodos();
-        todos.push({ text: text, done: false, user: AppUser.get() || 'unknown' });
-        save(todos);
+        await DataSync.add('todos', { text: text, done: false, user_role: AppUser.get() || 'unknown' });
         input.value = '';
-        render();
+        loadTodos();
     });
 
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') addBtn.click();
     });
 
-    list.addEventListener('click', (e) => {
+    list.addEventListener('click', async (e) => {
         const check = e.target.closest('.todo-check');
         const del = e.target.closest('.todo-del');
-        const todos = getTodos();
         if (check) {
-            const i = parseInt(check.dataset.i);
-            todos[i].done = !todos[i].done;
-            save(todos);
-            render();
+            const id = parseInt(check.dataset.id);
+            const todos = await DataSync.getList('todos');
+            const todo = todos.find(t => t.id === id);
+            if (todo) {
+                await DataSync.update('todos', id, { done: !todo.done });
+                loadTodos();
+            }
         }
         if (del) {
-            const i = parseInt(del.dataset.i);
-            todos.splice(i, 1);
-            save(todos);
-            render();
+            const id = parseInt(del.dataset.id);
+            await DataSync.remove('todos', id);
+            loadTodos();
         }
     });
 
-    // 初始化：从 GitHub 拉取最新数据
-    (async () => {
-        const remote = await GitHubSync.get('data/todos.json');
-        if (remote) {
-            _sha = remote.sha;
-            saveLocal(remote.content);
-        }
-        render();
-    })();
+    // 初始化
+    loadTodos();
+    // 实时订阅
+    DataSync.subscribe('todos', () => loadTodos());
 })();
 
-/* ========== 日常打卡（远程同步） ========== */
+/* ========== 日常打卡（Supabase 同步） ========== */
 (function initCheckin() {
     const btn = document.getElementById('btnCheckin');
     const streakEl = document.getElementById('checkinStreak');
     const grid = document.getElementById('checkinGrid');
-    const KEY = 'love-checkin';
-    let _sha = null;
+    let checkinData = { dates: [] };
 
-    function getData() {
-        const raw = JSON.parse(localStorage.getItem(KEY) || '{"dates":[]}');
-        // 兼容旧格式：将字符串数组转为对象数组
-        raw.dates = raw.dates.map(d => typeof d === 'string' ? { date: d, user: '' } : d);
-        return raw;
-    }
-
-    function saveLocal(data) {
-        localStorage.setItem(KEY, JSON.stringify(data));
-    }
-
-    async function pushToGitHub(data) {
-        const ok = await GitHubSync.set('data/checkin.json', data, _sha);
-        if (ok) {
-            const fresh = await GitHubSync.get('data/checkin.json');
-            if (fresh) _sha = fresh.sha;
+    async function loadCheckin() {
+        const record = await DataSync.getSingle('checkin');
+        if (record && record.dates) {
+            checkinData = { dates: record.dates };
         }
-    }
-
-    function save(data) {
-        saveLocal(data);
-        pushToGitHub(data);
+        render();
     }
 
     function getStreak() {
-        const data = getData();
-        const dates = data.dates.map(d => d.date).sort();
+        const dates = checkinData.dates.map(d => d.date || d).sort();
         if (dates.length === 0) return 0;
         let streak = 0;
         const today = new Date();
@@ -2090,15 +2005,14 @@ window.addEventListener('load', () => {
         return streak;
     }
 
-    function renderGrid() {
-        const data = getData();
+    function render() {
         const today = new Date();
         grid.innerHTML = '';
         for (let i = 27; i >= 0; i--) {
             const d = new Date(today);
             d.setDate(d.getDate() - i);
             const ds = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-            const entry = data.dates.find(e => e.date === ds);
+            const entry = checkinData.dates.find(e => (e.date || e) === ds);
             const checked = !!entry;
             const isToday = i === 0;
             const userIcon = entry && entry.user && AppUser.info(entry.user) ? AppUser.info(entry.user).icon : '';
@@ -2108,42 +2022,36 @@ window.addEventListener('load', () => {
             div.title = ds + (userIcon ? ' (' + userIcon + ')' : '');
             grid.appendChild(div);
         }
+        streakEl.textContent = '连续打卡: ' + getStreak() + ' 天';
+        
+        // 检查今天是否已打卡
+        const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+        if (checkinData.dates.some(e => (e.date || e) === todayStr)) {
+            btn.textContent = '已打卡 ✓';
+            btn.disabled = true;
+        } else {
+            btn.textContent = '立即打卡';
+            btn.disabled = false;
+        }
     }
 
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
         const today = new Date();
         const ds = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-        const data = getData();
-        if (data.dates.some(e => e.date === ds)) {
+        if (checkinData.dates.some(e => (e.date || e) === ds)) {
             btn.textContent = '今天已经打过卡啦 ✓';
             btn.disabled = true;
             return;
         }
-        data.dates.push({ date: ds, user: AppUser.get() || 'unknown' });
-        save(data);
-        streakEl.textContent = '连续打卡: ' + getStreak() + ' 天';
-        btn.textContent = '已打卡 ✓';
-        btn.disabled = true;
-        renderGrid();
+        checkinData.dates.push({ date: ds, user: AppUser.get() || 'unknown' });
+        await DataSync.updateSingle('checkin', { dates: checkinData.dates });
+        render();
     });
 
-    // 初始化：从 GitHub 拉取
-    (async () => {
-        const remote = await GitHubSync.get('data/checkin.json');
-        if (remote) {
-            _sha = remote.sha;
-            saveLocal(remote.content);
-        }
-        const today = new Date();
-        const ds = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-        const data = getData();
-        if (data.dates.some(e => e.date === ds)) {
-            btn.textContent = '已打卡 ✓';
-            btn.disabled = true;
-        }
-        streakEl.textContent = '连续打卡: ' + getStreak() + ' 天';
-        renderGrid();
-    })();
+    // 初始化
+    loadCheckin();
+    // 实时订阅
+    DataSync.subscribe('checkin', () => loadCheckin());
 })();
 
 /* ========== 备忘录 ========== */
@@ -2165,68 +2073,51 @@ window.addEventListener('load', () => {
     });
 })();
 
-/* ========== 喝水提醒（远程同步） ========== */
+/* ========== 喝水提醒（Supabase 同步） ========== */
 (function initWater() {
     const cupsEl = document.getElementById('waterCups');
     const fillEl = document.getElementById('waterFill');
     const addBtn = document.getElementById('btnWaterAdd');
     const resetBtn = document.getElementById('btnWaterReset');
     const timerEl = document.getElementById('waterTimer');
-    const KEY = 'love-water';
-    let _sha = null;
+    let waterData = { cups: 0, date: '' };
 
-    function getData() {
-        const d = JSON.parse(localStorage.getItem(KEY) || '{"cups":0,"date":""}');
+    async function loadWater() {
+        const record = await DataSync.getSingle('water');
         const today = new Date().toDateString();
-        if (d.date !== today) {
-            d.cups = 0;
-            d.date = today;
+        if (record) {
+            waterData = { cups: record.cups || 0, date: record.date || today };
         }
-        return d;
-    }
-
-    function saveLocal(data) {
-        localStorage.setItem(KEY, JSON.stringify(data));
-    }
-
-    async function pushToGitHub(data) {
-        const ok = await GitHubSync.set('data/water.json', data, _sha);
-        if (ok) {
-            const fresh = await GitHubSync.get('data/water.json');
-            if (fresh) _sha = fresh.sha;
+        // 如果日期不是今天，重置杯数
+        if (waterData.date !== today) {
+            waterData.cups = 0;
+            waterData.date = today;
+            await DataSync.updateSingle('water', { cups: 0, date: today });
         }
-    }
-
-    function save(data) {
-        saveLocal(data);
-        pushToGitHub(data);
+        render();
     }
 
     function render() {
-        const data = getData();
-        cupsEl.textContent = data.cups;
-        fillEl.style.width = Math.min(data.cups / 8 * 100, 100) + '%';
+        cupsEl.textContent = waterData.cups;
+        fillEl.style.width = Math.min(waterData.cups / 8 * 100, 100) + '%';
     }
 
-    addBtn.addEventListener('click', () => {
-        const data = getData();
-        if (data.cups < 20) data.cups++;
-        save(data);
+    addBtn.addEventListener('click', async () => {
+        if (waterData.cups < 20) waterData.cups++;
+        await DataSync.updateSingle('water', { cups: waterData.cups, date: waterData.date });
         render();
     });
 
-    resetBtn.addEventListener('click', () => {
-        const data = getData();
-        data.cups = 0;
-        save(data);
+    resetBtn.addEventListener('click', async () => {
+        waterData.cups = 0;
+        await DataSync.updateSingle('water', { cups: 0, date: waterData.date });
         render();
     });
 
     // 喝水提醒（每30分钟）
     setInterval(() => {
-        const data = getData();
-        if (data.cups < 8) {
-            timerEl.textContent = '💧 记得喝水！今天已喝 ' + data.cups + ' 杯';
+        if (waterData.cups < 8) {
+            timerEl.textContent = '💧 记得喝水！今天已喝 ' + waterData.cups + ' 杯';
             timerEl.style.color = '#48dbfb';
             setTimeout(() => {
                 timerEl.style.color = '';
@@ -2235,56 +2126,35 @@ window.addEventListener('load', () => {
         }
     }, 30 * 60 * 1000);
 
-    // 初始化：从 GitHub 拉取
-    (async () => {
-        const remote = await GitHubSync.get('data/water.json');
-        if (remote) {
-            _sha = remote.sha;
-            saveLocal(remote.content);
-        }
-        render();
-    })();
+    // 初始化
+    loadWater();
+    // 实时订阅
+    DataSync.subscribe('water', () => loadWater());
 })();
 
-/* ========== 心情记录（远程同步） ========== */
+/* ========== 心情记录（Supabase 同步） ========== */
 (function initMood() {
     const picker = document.getElementById('moodPicker');
     const history = document.getElementById('moodHistory');
-    const KEY = 'love-moods';
-    let _sha = null;
+    let moodData = {};
 
-    function getData() {
-        return JSON.parse(localStorage.getItem(KEY) || '{}');
-    }
-
-    function saveLocal(data) {
-        localStorage.setItem(KEY, JSON.stringify(data));
-    }
-
-    async function pushToGitHub(data) {
-        const ok = await GitHubSync.set('data/moods.json', data, _sha);
-        if (ok) {
-            const fresh = await GitHubSync.get('data/moods.json');
-            if (fresh) _sha = fresh.sha;
-        }
-    }
-
-    function save(data) {
-        saveLocal(data);
-        pushToGitHub(data);
+    async function loadMoods() {
+        const entries = await DataSync.getList('moods');
+        moodData = {};
+        entries.forEach(e => { moodData[e.date] = { emoji: e.emoji, user: e.user_role }; });
+        renderHistory();
     }
 
     function renderHistory() {
-        const data = getData();
         const today = new Date();
         history.innerHTML = '';
         for (let i = 13; i >= 0; i--) {
             const d = new Date(today);
             d.setDate(d.getDate() - i);
             const ds = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-            const entry = data[ds];
-            const emoji = typeof entry === 'object' ? entry.emoji : (entry || '');
-            const user = typeof entry === 'object' && entry.user ? entry.user : '';
+            const entry = moodData[ds];
+            const emoji = entry ? entry.emoji : '';
+            const user = entry ? entry.user : '';
             const userIcon = user && AppUser.info(user) ? AppUser.info(user).icon : '';
             const div = document.createElement('div');
             div.className = 'mood-dot';
@@ -2294,39 +2164,29 @@ window.addEventListener('load', () => {
         }
     }
 
-    picker.addEventListener('click', (e) => {
+    picker.addEventListener('click', async (e) => {
         const emoji = e.target.closest('.mood-emoji');
         if (!emoji) return;
         const today = new Date();
         const ds = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-        const data = getData();
-        data[ds] = { emoji: emoji.textContent, user: AppUser.get() || 'unknown' };
-        save(data);
+        // 检查是否已存在
+        const existing = await DataSync.getList('moods');
+        const found = existing.find(m => m.date === ds);
+        if (found) {
+            await DataSync.update('moods', found.id, { emoji: emoji.textContent, user_role: AppUser.get() || 'unknown' });
+        } else {
+            await DataSync.add('moods', { date: ds, emoji: emoji.textContent, user_role: AppUser.get() || 'unknown' });
+        }
 
         picker.querySelectorAll('.mood-emoji').forEach(e => e.classList.remove('selected'));
         emoji.classList.add('selected');
-        renderHistory();
+        loadMoods();
     });
 
-    // 初始化：从 GitHub 拉取
-    (async () => {
-        const remote = await GitHubSync.get('data/moods.json');
-        if (remote) {
-            _sha = remote.sha;
-            saveLocal(remote.content);
-        }
-        // 检查今天是否已选心情
-        const today = new Date();
-        const ds = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-        const data = getData();
-        if (data[ds]) {
-            const todayEmoji = typeof data[ds] === 'object' ? data[ds].emoji : data[ds];
-            picker.querySelectorAll('.mood-emoji').forEach(e => {
-                if (e.textContent === todayEmoji) e.classList.add('selected');
-            });
-        }
-        renderHistory();
-    })();
+    // 初始化
+    loadMoods();
+    // 实时订阅
+    DataSync.subscribe('moods', () => loadMoods());
 })();
 
 /* ========== 共同画板 ========== */
@@ -2473,8 +2333,6 @@ window.addEventListener('load', () => {
     }
 
     renderDrawings();
-    // 每10秒自动刷新
-    setInterval(renderDrawings, 10000);
 })();
 
 /* ========== 照片墙 ========== */
@@ -2576,8 +2434,6 @@ window.addEventListener('load', () => {
     }
 
     renderPhotos();
-    // 每10秒自动刷新
-    setInterval(renderPhotos, 10000);
 })();
 
 /* ========== 每日任务 ========== */
@@ -2670,7 +2526,6 @@ window.addEventListener('load', () => {
     });
 
     render();
-    setInterval(render, 10000);
 })();
 
 /* ========== 亲密打卡 ========== */
@@ -2704,7 +2559,6 @@ window.addEventListener('load', () => {
     kissBtn.addEventListener('click', () => add('kisses'));
     holdBtn.addEventListener('click', () => add('holds'));
     render();
-    setInterval(render, 10000);
 })();
 
 /* ========== 时光机 ========== */
@@ -2792,7 +2646,6 @@ window.addEventListener('load', () => {
     });
 
     render();
-    setInterval(render, 10000);
 })();
 
 /* ========== 秘密信箱 ========== */
@@ -2843,7 +2696,6 @@ window.addEventListener('load', () => {
     });
 
     render();
-    setInterval(render, 10000);
 })();
 
 /* ========== 电子宠物（增强版） ========== */
@@ -3089,7 +2941,6 @@ window.addEventListener('load', () => {
     }
     
     render();
-    setInterval(render, 10000);
 })();
 
 /* ========== 情侣歌单 ========== */
@@ -3137,7 +2988,6 @@ window.addEventListener('load', () => {
     });
 
     render();
-    setInterval(render, 10000);
 })();
 
 /* ========== 爱情天气预报 ========== */
