@@ -108,12 +108,13 @@
         calendar.querySelectorAll('.diary-day[data-date]').forEach(el => {
             el.addEventListener('click', () => {
                 const date = el.dataset.date;
+                // 更新日期输入框
+                dateInput.value = date;
                 const entries = diaryData[date];
                 if (entries && entries.length > 0) {
                     showDiaryDetail(date, entries);
                 } else {
-                    // 自动填充日期
-                    dateInput.value = date;
+                    // 自动填充日期并聚焦
                     textInput.focus();
                 }
             });
