@@ -59,8 +59,10 @@
         if (e.key === 'Enter') submitMessage();
     });
 
-    // 初始化
+    // 初始化 - 先显示缓存，再后台刷新
     loadMessages();
+    // 后台刷新
+    setTimeout(() => DataSync.refresh('messages', 'id.desc').then(renderMessages), 100);
     // 实时订阅
     DataSync.subscribe('messages', () => loadMessages());
 })();
