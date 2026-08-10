@@ -2503,9 +2503,18 @@ body.day-mode .counter-num {
 
 .diary-today-btn {
     width: auto !important;
-    padding: 0 12px !important;
+    padding: 0 10px !important;
     font-size: 0.75rem !important;
     white-space: nowrap;
+    visibility: visible;
+    opacity: 1;
+    transition: all 0.3s ease;
+}
+
+.diary-today-hidden {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .diary-month-title {

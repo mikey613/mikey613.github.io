@@ -35,7 +35,7 @@
                 <button class="diary-nav-btn" id="diaryPrevMonth"><i class="fas fa-chevron-left"></i></button>
                 <span class="diary-month-title">${currentYear}年 ${monthNames[currentMonth]}</span>
                 <div class="diary-nav-right">
-                    ${!isCurrentMonthView ? '<button class="diary-nav-btn diary-today-btn" id="diaryTodayBtn"><i class="fas fa-calendar-day"></i> 今天</button>' : ''}
+                    <button class="diary-nav-btn diary-today-btn${isCurrentMonthView ? ' diary-today-hidden' : ''}" id="diaryTodayBtn">今</button>
                     <button class="diary-nav-btn" id="diaryNextMonth"><i class="fas fa-chevron-right"></i></button>
                 </div>
             </div>
