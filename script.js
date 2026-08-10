@@ -1735,14 +1735,14 @@ window.addEventListener('load', () => {
 
     function renderWith(coupons) {
         grid.innerHTML = '';
-        coupons.forEach((c, i) => {
+        coupons.forEach((c) => {
             const div = document.createElement('div');
             div.className = 'coupon-card';
-            const userIcon = c.user && AppUser.info(c.user) ? AppUser.info(c.user).icon : '';
+            const userIcon = c.user_role && AppUser.info(c.user_role) ? AppUser.info(c.user_role).icon : '';
             div.innerHTML = '<div class="coupon-title">' + c.title + '</div>' +
-                '<div class="coupon-from">' + userIcon + ' 发给 ' + (c.to === 'hao' ? '文豪' : '霞霞') + '</div>' +
+                '<div class="coupon-from">' + userIcon + ' 发给 ' + (c.target_user === 'hao' ? '文豪' : '霞霞') + '</div>' +
                 (c.redeemed ? '<div style="margin-top:8px;font-size:0.75rem;opacity:0.7;">已兑换 ✓</div>' :
-                '<button class="coupon-redeem" data-i="' + i + '">兑换</button>');
+                '<button class="coupon-redeem" data-id="' + c.id + '">兑换</button>');
             grid.appendChild(div);
         });
     }
@@ -1962,7 +1962,6 @@ window.addEventListener('load', () => {
     
     // 本地缓存宠物数据
     let localPet = null;
-    let localSha = null;
     let lastSpeechCategory = '';
     let isUpdating = false;
     
@@ -2195,7 +2194,7 @@ window.addEventListener('load', () => {
     function renderWith(songs) {
         list.innerHTML = '';
         songs.forEach(s => {
-            const userIcon = s.user && AppUser.info(s.user) ? AppUser.info(s.user).icon : '';
+            const userIcon = s.user_role && AppUser.info(s.user_role) ? AppUser.info(s.user_role).icon : '';
             const div = document.createElement('div');
             div.className = 'playlist-item';
             div.innerHTML = '<div class="playlist-item-icon">🎵</div>' +
