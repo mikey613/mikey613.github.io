@@ -3,8 +3,8 @@ const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
 const isLowEnd = isMobile || navigator.hardwareConcurrency <= 4;
 
 /* ========== Supabase 配置 ========== */
-const SUPABASE_URL = 'https://isdckunnkdnljouvrehb.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzZGNrdW5ua2RubGpvdXZyZWhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzMTEzOTMsImV4cCI6MjEwMTg4NzM5M30.M6fAfu9nG5cv5uv3LNyc-p96Bcb01PoVHroMIuf6PZU';
+const SUPABASE_URL = 'https://nlfbzbwyjrkglddyfvct.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sZmJ6Ynd5anJrZ2xkZHlmdmN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzMjQ5MTIsImV4cCI6MjEwMTkwMDkxMn0.AwiYu2mLcXMDnlYazJqRoCsf7gRlL3Y-xO_VJwjLcX8';
 
 /* ========== GitHub 配置（兼容旧功能） ========== */
 const GITHUB_TOKEN = ''; // 如需使用旧功能，填入你的 GitHub PAT
