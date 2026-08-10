@@ -1,12 +1,20 @@
 /* ========== 嘉宾留言板（Supabase 持久化） ========== */
 (function initGuestbook() {
-    const input = document.getElementById('msgInput');
-    const nameInput = document.getElementById('msgName');
-    const submitBtn = document.getElementById('msgSubmit');
-    const list = document.getElementById('msgList');
+    const input = document.getElementById('gbMessage');
+    const nameInput = document.getElementById('gbName');
+    const submitBtn = document.getElementById('submitGb');
+    const list = document.getElementById('gbList');
+    const loading = document.getElementById('gbLoading');
 
     function renderMessages(messages) {
+        // 隐藏加载提示
+        if (loading) loading.style.display = 'none';
+        
         list.innerHTML = '';
+        if (messages.length === 0) {
+            list.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:20px;">还没有留言，快来抢沙发吧！</div>';
+            return;
+        }
         messages.forEach(m => {
             const div = document.createElement('div');
             div.className = 'msg-item';
