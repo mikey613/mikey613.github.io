@@ -1552,21 +1552,13 @@ window.addEventListener('load', () => {
         const user = AppUser.get() || 'unknown';
 
         try {
-            // 获取现有画作列表
-            const remote = await GitHubSync.get('data/drawings.json');
-            const drawings = remote ? remote.content : [];
-            const sha = remote ? remote.sha : null;
-
-            // 添加新画作
-            drawings.push({
+            // 保存画作到 Supabase
+            const result = await DataSync.add('drawings', {
                 image: base64,
-                user: user,
+                user_role: user,
                 time: timeStr
             });
-
-            // 保存到 GitHub
-            const ok = await GitHubSync.set('data/drawings.json', drawings, sha);
-            if (ok) {
+            if (result) {
                 alert('画作已保存！');
                 // 清空画布
                 ctx.fillStyle = '#1a1a2e';
@@ -1585,14 +1577,13 @@ window.addEventListener('load', () => {
     });
 
     function renderDrawings() {
-        GitHubSync.get('data/drawings.json').then(remote => {
-            const drawings = remote ? remote.content : [];
+        DataSync.getList('drawings', 'id.desc').then(drawings => {
             drawList.innerHTML = '';
-            drawings.slice().reverse().forEach(d => {
-                const userIcon = d.user && AppUser.info(d.user) ? AppUser.info(d.user).icon : '';
+            drawings.forEach(d => {
+                const userIcon = d.user_role && AppUser.info(d.user_role) ? AppUser.info(d.user_role).icon : '';
                 const div = document.createElement('div');
                 div.className = 'draw-item';
-                div.innerHTML = '<img src="data:image/png;base64,' + d.image + '" alt="画作">' +
+                div.innerHTML = '<img src="' + d.image + '" alt="画作">' +
                     '<div class="draw-item-info">' +
                     '<span>' + userIcon + ' ' + d.time + '</span>' +
                     '</div>';
@@ -1631,19 +1622,13 @@ window.addEventListener('load', () => {
                 String(now.getMinutes()).padStart(2, '0');
             const user = AppUser.get() || 'unknown';
 
-            // 获取现有照片
-            const remote = await GitHubSync.get('data/photos.json');
-            const photos = remote ? remote.content : [];
-            const sha = remote ? remote.sha : null;
-
-            photos.push({
+            // 保存照片到 Supabase
+            const result = await DataSync.add('photos', {
                 image: base64,
-                user: user,
+                user_role: user,
                 time: timeStr
             });
-
-            const ok = await GitHubSync.set('data/photos.json', photos, sha);
-            if (ok) {
+            if (result) {
                 renderPhotos();
             } else {
                 alert('上传失败，请重试');
@@ -1685,17 +1670,16 @@ window.addEventListener('load', () => {
     }
 
     function renderPhotos() {
-        GitHubSync.get('data/photos.json').then(remote => {
-            const photos = remote ? remote.content : [];
+        DataSync.getList('photos', 'id.desc').then(photos => {
             wall.innerHTML = '';
-            photos.slice().reverse().forEach(p => {
-                const userIcon = p.user && AppUser.info(p.user) ? AppUser.info(p.user).icon : '';
+            photos.forEach(p => {
+                const userIcon = p.user_role && AppUser.info(p.user_role) ? AppUser.info(p.user_role).icon : '';
                 const div = document.createElement('div');
                 div.className = 'photo-item';
-                div.innerHTML = '<img src="data:image/jpeg;base64,' + p.image + '" alt="照片" onclick="window.open(this.src)">' +
+                div.innerHTML = '<img src="' + p.image + '" alt="照片" onclick="window.open(this.src)">' +
                     '<div class="photo-item-info">' +
                     '<span>' + p.time + '</span>' +
-                    (userIcon ? '<span class="data-user-tag ' + p.user + '">' + userIcon + '</span>' : '') +
+                    (userIcon ? '<span class="data-user-tag ' + p.user_role + '">' + userIcon + '</span>' : '') +
                     '</div>';
                 wall.appendChild(div);
             });
@@ -1764,34 +1748,30 @@ window.addEventListener('load', () => {
     }
 
     function render() {
-        GitHubSync.get('data/coupons.json').then(remote => {
-            const coupons = remote ? remote.content : [];
+        DataSync.getList('coupons').then(coupons => {
             renderWith(coupons);
         });
     }
 
-    createBtn.addEventListener('click', () => {
+    createBtn.addEventListener('click', async () => {
         const title = prompt('输入兑换券内容（如：按摩一次）');
         if (!title) return;
         const to = AppUser.get() === 'hao' ? 'xia' : 'hao';
-        GitHubSync.get('data/coupons.json').then(remote => {
-            const coupons = remote ? remote.content : [];
-            const sha = remote ? remote.sha : null;
-            coupons.push({ title: title, to: to, user: AppUser.get(), redeemed: false });
-            GitHubSync.set('data/coupons.json', coupons, sha).then(() => renderWith(coupons));
+        await DataSync.add('coupons', { 
+            title: title, 
+            target_user: to, 
+            user_role: AppUser.get(), 
+            redeemed: false 
         });
+        render();
     });
 
-    grid.addEventListener('click', (e) => {
+    grid.addEventListener('click', async (e) => {
         const btn = e.target.closest('.coupon-redeem');
         if (!btn) return;
-        const i = parseInt(btn.dataset.i);
-        GitHubSync.get('data/coupons.json').then(remote => {
-            const coupons = remote ? remote.content : [];
-            const sha = remote ? remote.sha : null;
-            coupons[i].redeemed = true;
-            GitHubSync.set('data/coupons.json', coupons, sha).then(() => renderWith(coupons));
-        });
+        const id = parseInt(btn.dataset.id);
+        await DataSync.update('coupons', id, { redeemed: true });
+        render();
     });
 
     render();
@@ -1809,19 +1789,17 @@ window.addEventListener('load', () => {
     }
 
     function render() {
-        GitHubSync.get('data/intimacy.json').then(remote => {
-            const data = remote ? remote.content : { hugs: 0, kisses: 0, holds: 0, date: '' };
-            renderWith(data);
+        DataSync.getSingle('intimacy').then(data => {
+            const intimacyData = data || { hugs: 0, kisses: 0, holds: 0 };
+            renderWith(intimacyData);
         });
     }
 
-    function add(type) {
-        GitHubSync.get('data/intimacy.json').then(remote => {
-            const data = remote ? remote.content : { hugs: 0, kisses: 0, holds: 0 };
-            const sha = remote ? remote.sha : null;
-            data[type] = (data[type] || 0) + 1;
-            GitHubSync.set('data/intimacy.json', data, sha).then(() => renderWith(data));
-        });
+    async function add(type) {
+        const data = await DataSync.getSingle('intimacy') || { hugs: 0, kisses: 0, holds: 0 };
+        data[type] = (data[type] || 0) + 1;
+        await DataSync.updateSingle('intimacy', data);
+        renderWith(data);
     }
 
     hugBtn.addEventListener('click', () => add('hugs'));
@@ -1839,8 +1817,9 @@ window.addEventListener('load', () => {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
 
-    GitHubSync.get('data/diary.json').then(remote => {
-        const diary = remote ? remote.content : {};
+    DataSync.getList('diary').then(entries => {
+        const diary = {};
+        entries.forEach(e => { diary[e.date] = { text: e.text, user: e.user_role }; });
         let found = false;
         for (let y = now.getFullYear() - 1; y >= 2025; y--) {
             const key = y + '-' + month + '-' + day;
@@ -1867,26 +1846,25 @@ window.addEventListener('load', () => {
     const createBtn = document.getElementById('capsuleCreateBtn');
 
     function render() {
-        GitHubSync.get('data/capsules.json').then(remote => {
-            const capsules = remote ? remote.content : [];
+        DataSync.getList('capsules').then(capsules => {
             list.innerHTML = '';
-            capsules.forEach((c, i) => {
-                const openDate = new Date(c.openDate);
+            capsules.forEach((c) => {
+                const openDate = new Date(c.open_date);
                 const now = new Date();
                 const canOpen = now >= openDate;
                 const div = document.createElement('div');
                 div.className = 'capsule-item';
                 div.innerHTML = '<div class="capsule-icon">💊</div>' +
-                    '<div class="capsule-date">封存于 ' + c.created + '</div>' +
-                    '<div class="capsule-date">' + (canOpen ? '可以打开了！' : '到 ' + c.openDate + ' 才能打开') + '</div>' +
-                    '<button class="capsule-open ' + (canOpen ? '' : 'locked') + '" data-i="' + i + '">' +
+                    '<div class="capsule-date">封存于 ' + c.created_date + '</div>' +
+                    '<div class="capsule-date">' + (canOpen ? '可以打开了！' : '到 ' + c.open_date + ' 才能打开') + '</div>' +
+                    '<button class="capsule-open ' + (canOpen ? '' : 'locked') + '" data-id="' + c.id + '">' +
                     (canOpen ? '打开' : '🔒 未到期') + '</button>';
                 list.appendChild(div);
             });
         });
     }
 
-    createBtn.addEventListener('click', () => {
+    createBtn.addEventListener('click', async () => {
         const content = prompt('写下想对未来的说的话：');
         if (!content) return;
         const days = prompt('多少天后打开？（如：30）');
@@ -1896,22 +1874,24 @@ window.addEventListener('load', () => {
         const openStr = openDate.getFullYear() + '-' + String(openDate.getMonth() + 1).padStart(2, '0') + '-' + String(openDate.getDate()).padStart(2, '0');
         const createdStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
 
-        GitHubSync.get('data/capsules.json').then(remote => {
-            const capsules = remote ? remote.content : [];
-            const sha = remote ? remote.sha : null;
-            capsules.push({ content: content, created: createdStr, openDate: openStr, user: AppUser.get() });
-            GitHubSync.set('data/capsules.json', capsules, sha).then(() => render());
+        await DataSync.add('capsules', { 
+            content: content, 
+            created_date: createdStr, 
+            open_date: openStr, 
+            user_role: AppUser.get() 
         });
+        render();
     });
 
-    list.addEventListener('click', (e) => {
+    list.addEventListener('click', async (e) => {
         const btn = e.target.closest('.capsule-open');
         if (!btn || btn.classList.contains('locked')) return;
-        const i = parseInt(btn.dataset.i);
-        GitHubSync.get('data/capsules.json').then(remote => {
-            const capsules = remote ? remote.content : [];
-            alert('💌 ' + capsules[i].content);
-        });
+        const id = parseInt(btn.dataset.id);
+        const capsules = await DataSync.getList('capsules');
+        const capsule = capsules.find(c => c.id === id);
+        if (capsule) {
+            alert('💌 ' + capsule.content);
+        }
     });
 
     render();
@@ -1925,43 +1905,41 @@ window.addEventListener('load', () => {
     const contentArea = document.getElementById('secretContent');
 
     function render() {
-        GitHubSync.get('data/secrets.json').then(remote => {
-            const secrets = remote ? remote.content : [];
+        DataSync.getList('secrets').then(secrets => {
             const me = AppUser.get();
-            const myMail = secrets.filter(s => s.to === me);
+            const myMail = secrets.filter(s => s.to_user === me);
             inbox.innerHTML = '';
             if (myMail.length === 0) {
                 inbox.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:20px;">还没有收到悄悄话</div>';
                 return;
             }
             myMail.reverse().forEach(s => {
-                const fromIcon = s.from && AppUser.info(s.from) ? AppUser.info(s.from).icon : '';
+                const fromIcon = s.from_user && AppUser.info(s.from_user) ? AppUser.info(s.from_user).icon : '';
                 const div = document.createElement('div');
                 div.className = 'secret-item';
-                div.innerHTML = '<div class="secret-item-header"><span>' + fromIcon + ' 来自' + (s.from === 'hao' ? '文豪' : '霞霞') + '</span><span>' + s.time + '</span></div>' +
+                div.innerHTML = '<div class="secret-item-header"><span>' + fromIcon + ' 来自' + (s.from_user === 'hao' ? '文豪' : '霞霞') + '</span><span>' + s.time + '</span></div>' +
                     '<div class="secret-item-content">' + s.content + '</div>';
                 inbox.appendChild(div);
             });
         });
     }
 
-    sendBtn.addEventListener('click', () => {
+    sendBtn.addEventListener('click', async () => {
         const content = contentArea.value.trim();
         if (!content) return;
         const to = toSelect.value;
         const now = new Date();
         const time = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
 
-        GitHubSync.get('data/secrets.json').then(remote => {
-            const secrets = remote ? remote.content : [];
-            const sha = remote ? remote.sha : null;
-            secrets.push({ from: AppUser.get(), to: to, content: content, time: time });
-            GitHubSync.set('data/secrets.json', secrets, sha).then(() => {
-                contentArea.value = '';
-                alert('悄悄话已发送！');
-                render();
-            });
+        await DataSync.add('secrets', { 
+            from_user: AppUser.get(), 
+            to_user: to, 
+            content: content, 
+            time: time 
         });
+        contentArea.value = '';
+        alert('悄悄话已发送！');
+        render();
     });
 
     render();
@@ -2025,7 +2003,7 @@ window.addEventListener('load', () => {
     
     function getEvolution(pet) {
         const score = getPetScore(pet);
-        const totalScore = (pet.totalCare || 0) + score;
+        const totalScore = (pet.total_care || 0) + score;
         for (let i = evolutions.length - 1; i >= 0; i--) {
             if (totalScore >= evolutions[i].minScore) {
                 return { ...evolutions[i], totalScore };
@@ -2050,7 +2028,7 @@ window.addEventListener('load', () => {
         pet.clean = pet.clean || 50;
         pet.energy = pet.energy || 50;
         pet.coins = pet.coins || 0;
-        pet.totalCare = pet.totalCare || 0;
+        pet.total_care = pet.total_care || 0;
         
         // 保存本地缓存
         localPet = { ...pet };
@@ -2086,25 +2064,24 @@ window.addEventListener('load', () => {
     
     function render() {
         if (isUpdating) return; // 正在更新时不刷新
-        GitHubSync.get('data/pet.json').then(remote => {
-            let pet = remote ? remote.content : { mood: 50, hunger: 50, clean: 50, energy: 50, coins: 0, totalCare: 0 };
-            localSha = remote ? remote.sha : null;
+        DataSync.getSingle('pet').then(remote => {
+            let pet = remote || { mood: 50, hunger: 50, clean: 50, energy: 50, coins: 0, total_care: 0 };
             renderWith(pet);
         });
     }
     
-    function update(changes, earnCoins = 0) {
+    async function update(changes, earnCoins = 0) {
         if (isUpdating) return;
         isUpdating = true;
         
         // 确保有本地数据
         if (!localPet) {
-            localPet = { mood: 50, hunger: 50, clean: 50, energy: 50, coins: 0, totalCare: 0 };
+            localPet = { mood: 50, hunger: 50, clean: 50, energy: 50, coins: 0, total_care: 0 };
         }
         
         // 立即用本地数据更新UI
         for (const [key, val] of Object.entries(changes)) {
-            if (key === 'coins' || key === 'totalCare') {
+            if (key === 'coins' || key === 'total_care') {
                 localPet[key] = (localPet[key] || 0) + val;
             } else {
                 localPet[key] = Math.min(100, Math.max(0, (localPet[key] || 50) + val));
@@ -2112,16 +2089,13 @@ window.addEventListener('load', () => {
         }
         if (earnCoins > 0) {
             localPet.coins = (localPet.coins || 0) + earnCoins;
-            localPet.totalCare = (localPet.totalCare || 0) + earnCoins;
+            localPet.total_care = (localPet.total_care || 0) + earnCoins;
         }
         renderWith(localPet, true); // 点击时强制更新说话
         
-        // 直接用本地数据保存到GitHub（不再重新获取）
-        GitHubSync.set('data/pet.json', localPet, localSha).then(() => {
-            isUpdating = false;
-        }).catch(() => {
-            isUpdating = false;
-        });
+        // 保存数据到 Supabase
+        await DataSync.updateSingle('pet', localPet);
+        isUpdating = false;
     }
     
     // 原有按钮
@@ -2160,8 +2134,8 @@ window.addEventListener('load', () => {
     });
     
     function renderShop() {
-        GitHubSync.get('data/pet.json').then(remote => {
-            const pet = remote ? remote.content : { coins: 0 };
+        DataSync.getSingle('pet').then(remote => {
+            const pet = remote || { coins: 0 };
             const coins = pet.coins || 0;
             
             shopItemsEl.innerHTML = '';
@@ -2185,7 +2159,7 @@ window.addEventListener('load', () => {
         });
     }
     
-    function buyItem(item) {
+    async function buyItem(item) {
         if (!localPet) {
             alert('数据加载中，请稍后');
             return;
@@ -2202,11 +2176,10 @@ window.addEventListener('load', () => {
             localPet[key] = Math.min(100, Math.max(0, (localPet[key] || 50) + val));
         }
         
-        GitHubSync.set('data/pet.json', localPet, localSha).then(() => {
-            renderWith(localPet);
-            renderShop();
-            alert('购买成功！');
-        });
+        await DataSync.updateSingle('pet', localPet);
+        renderWith(localPet);
+        renderShop();
+        alert('购买成功！');
     }
     
     render();
@@ -2233,27 +2206,23 @@ window.addEventListener('load', () => {
     }
 
     function render() {
-        GitHubSync.get('data/playlist.json').then(remote => {
-            const songs = remote ? remote.content : [];
+        DataSync.getList('playlist').then(songs => {
             renderWith(songs);
         });
     }
 
-    addBtn.addEventListener('click', () => {
+    addBtn.addEventListener('click', async () => {
         const name = nameInput.value.trim();
         const artist = artistInput.value.trim();
         if (!name) return;
-        GitHubSync.get('data/playlist.json').then(remote => {
-            const songs = remote ? remote.content : [];
-            const sha = remote ? remote.sha : null;
-            songs.push({ name: name, artist: artist || '未知', user: AppUser.get() });
-            GitHubSync.set('data/playlist.json', songs, sha).then(() => {
-                nameInput.value = '';
-                artistInput.value = '';
-                // 直接渲染新数据，不等待API
-                renderWith(songs);
-            });
+        await DataSync.add('playlist', { 
+            name: name, 
+            artist: artist || '未知', 
+            user_role: AppUser.get() 
         });
+        nameInput.value = '';
+        artistInput.value = '';
+        render();
     });
 
     render();
@@ -2316,29 +2285,29 @@ window.addEventListener('load', () => {
         btn.disabled = true;
         
         try {
-            const files = [
-                'data/messages.json',
-                'data/todos.json',
-                'data/diary.json',
-                'data/wishes.json',
-                'data/moods.json',
-                'data/checkin.json',
-                'data/water.json',
-                'data/drawings.json',
-                'data/photos.json',
-                'data/coupons.json',
-                'data/intimacy.json',
-                'data/capsules.json',
-                'data/secrets.json',
-                'data/pet.json',
-                'data/playlist.json'
+            const tables = [
+                'messages',
+                'todos',
+                'diary',
+                'wishes',
+                'moods',
+                'checkin',
+                'water',
+                'drawings',
+                'photos',
+                'coupons',
+                'intimacy',
+                'capsules',
+                'secrets',
+                'pet',
+                'playlist'
             ];
             
             const backup = {};
-            for (const file of files) {
-                const remote = await GitHubSync.get(file);
-                if (remote) {
-                    backup[file] = remote.content;
+            for (const table of tables) {
+                const data = await DataSync.getList(table);
+                if (data && data.length > 0) {
+                    backup[table] = data;
                 }
             }
             
