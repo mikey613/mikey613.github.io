@@ -97,6 +97,9 @@
                 const now = new Date();
                 currentYear = now.getFullYear();
                 currentMonth = now.getMonth();
+                // 更新日期输入框为今天
+                const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+                dateInput.value = todayStr;
                 renderCalendar();
             });
         }
