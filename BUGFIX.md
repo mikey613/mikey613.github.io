@@ -28,6 +28,29 @@
 
 ---
 
+## 1.1 Supabase CDN 无法访问（最终修复）
+
+### 问题描述
+用户网络无法访问 `cdn.jsdelivr.net`，请求超时 `net::ERR_CONNECTION_TIMED_OUT`。
+
+### 根本原因
+- 用户网络环境无法访问 jsdelivr CDN
+- 所有依赖外部 SDK 的功能全部失效
+
+### 修复方案
+创建轻量级 Supabase 客户端 `js/supabase-lite.js`，直接使用 `fetch()` 调用 Supabase REST API，不依赖任何外部 SDK。
+
+### 修改文件
+- 新增 `js/supabase-lite.js` - 轻量级 Supabase 客户端
+- `index.html` - 改用本地 SDK
+
+```diff
+- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
++ <script src="js/supabase-lite.js"></script>
+```
+
+---
+
 ## 2. 留言板元素 ID 不匹配
 
 ### 问题描述
