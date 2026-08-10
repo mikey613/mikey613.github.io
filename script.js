@@ -1285,11 +1285,16 @@ window.addEventListener('load', () => {
     const nextBtn = document.getElementById('slideNext');
     let current = 0;
 
-    // 生成图片
-    photos.forEach(src => {
+    // 生成图片（懒加载）
+    photos.forEach((src, i) => {
         const img = document.createElement('img');
-        img.src = src;
+        img.dataset.src = src;  // 使用 data-src 而不是 src
         img.alt = '照片';
+        img.loading = 'lazy';
+        // 第一张图片立即加载
+        if (i === 0) {
+            img.src = src;
+        }
         track.appendChild(img);
     });
 
@@ -1308,6 +1313,11 @@ window.addEventListener('load', () => {
         dotsContainer.querySelectorAll('.slide-dot').forEach((d, i) => {
             d.classList.toggle('active', i === current);
         });
+        // 懒加载当前图片
+        const imgs = track.querySelectorAll('img');
+        if (imgs[current] && imgs[current].dataset.src && !imgs[current].src) {
+            imgs[current].src = imgs[current].dataset.src;
+        }
     }
 
     prevBtn.addEventListener('click', () => goTo((current - 1 + photos.length) % photos.length));
