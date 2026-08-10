@@ -6,6 +6,9 @@ const isLowEnd = isMobile || navigator.hardwareConcurrency <= 4;
 const SUPABASE_URL = 'https://isdckunnkdnljouvrehb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzZGNrdW5ua2RubGpvdXZyZWhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzMTEzOTMsImV4cCI6MjEwMTg4NzM5M30.M6fAfu9nG5cv5uv3LNyc-p96Bcb01PoVHroMIuf6PZU';
 
+/* ========== GitHub 配置（兼容旧功能） ========== */
+const GITHUB_TOKEN = ''; // 如需使用旧功能，填入你的 GitHub PAT
+
 /* ========== Supabase 数据同步模块 ========== */
 const DataSync = (function() {
     let sb = null;
@@ -125,6 +128,47 @@ const DataSync = (function() {
     }
     
     return { getClient, getSingle, updateSingle, getList, add, update, remove, subscribe };
+})();
+
+/* ========== GitHub 兼容层（保留旧功能，新功能用 Supabase） ========== */
+const GitHubSync = (function() {
+    const REPO = 'mikey613/mikey613.github.io';
+    const BRANCH = 'main';
+    const API = `https://api.github.com/repos/${REPO}/contents`;
+
+    async function get(path) {
+        try {
+            const res = await fetch(`${API}/${path}?t=${Date.now()}`, {
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            });
+            if (!res.ok) return null;
+            const data = await res.json();
+            return { content: JSON.parse(atob(data.content)), sha: data.sha };
+        } catch (e) { return null; }
+    }
+
+    async function set(path, content, sha) {
+        try {
+            const res = await fetch(`${API}/${path}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `update ${path}`,
+                    content: btoa(unescape(encodeURIComponent(JSON.stringify(content)))),
+                    sha: sha,
+                    branch: BRANCH
+                })
+            });
+            if (!res.ok) return false;
+            const data = await res.json();
+            return data.content?.sha || true;
+        } catch (e) { return false; }
+    }
+
+    return { get, set };
 })();
 
 /* ========== 角色选择系统 ========== */
