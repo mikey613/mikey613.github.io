@@ -2,58 +2,108 @@
 const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || window.innerWidth < 768;
 const isLowEnd = isMobile || navigator.hardwareConcurrency <= 4;
 
-/* ========== GitHub 配置 ========== */
-const GITHUB_REPO = 'mikey613/mikey613.github.io';
-const _EP = [103,104,112,95,111,101,75,100,79,113,86,53,51,49,52,79,105,98,90,55,111,68,102,103,120,118,54,113,106,71,70,88,114,77,52,100,111,82,69,99];
-const GITHUB_TOKEN = String.fromCharCode(..._EP);
+/* ========== Supabase 配置 ========== */
+const SUPABASE_URL = 'https://isdckunnkdnljouvrehb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzZGNrdW5ua2RubGpvdXZyZWhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzMTEzOTMsImV4cCI6MjEwMTg4NzM5M30.M6fAfu9nG5cv5uv3LNyc-p96Bcb01PoVHroMIuf6PZU';
 
-/* ========== GitHub 远程同步模块 ========== */
-const GitHubSync = (function() {
-    const enabled = !!(GITHUB_REPO && GITHUB_TOKEN);
-    const api = 'https://api.github.com';
-    const headers = {
-        'Accept': 'application/vnd.github.v3+json',
-        'Authorization': 'token ' + GITHUB_TOKEN,
-        'Content-Type': 'application/json'
-    };
-
-    async function get(path) {
-        if (!enabled) return null;
+/* ========== Supabase 数据同步模块 ========== */
+const DataSync = (function() {
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // 获取单条记录（用于单例数据如 pet, intimacy）
+    async function getSingle(table) {
         try {
-            const resp = await fetch(api + '/repos/' + GITHUB_REPO + '/contents/' + path);
-            if (!resp.ok) return null;
-            const data = await resp.json();
-            return {
-                content: JSON.parse(decodeURIComponent(escape(atob(data.content)))),
-                sha: data.sha
-            };
+            const { data, error } = await sb.from(table).select('*').limit(1).maybeSingle();
+            if (error) {
+                console.warn('[DataSync] getSingle error:', error);
+                return null;
+            }
+            return data;
         } catch (e) {
-            console.warn('[GitHubSync] get failed:', e);
+            console.warn('[DataSync] getSingle failed:', e);
             return null;
         }
     }
-
-    async function set(path, data, sha) {
-        if (!enabled) return false;
+    
+    // 更新单条记录
+    async function updateSingle(table, values) {
         try {
-            const body = {
-                message: 'sync: update ' + path,
-                content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))),
-                sha: sha
-            };
-            const resp = await fetch(api + '/repos/' + GITHUB_REPO + '/contents/' + path, {
-                method: 'PUT',
-                headers: headers,
-                body: JSON.stringify(body)
-            });
-            return resp.ok;
+            // 先检查是否存在
+            const { data: existing } = await sb.from(table).select('id').limit(1).maybeSingle();
+            if (existing) {
+                const { error } = await sb.from(table).update(values).eq('id', existing.id);
+                return !error;
+            } else {
+                const { error } = await sb.from(table).insert(values);
+                return !error;
+            }
         } catch (e) {
-            console.warn('[GitHubSync] set failed:', e);
+            console.warn('[DataSync] updateSingle failed:', e);
             return false;
         }
     }
-
-    return { enabled, get, set };
+    
+    // 获取列表
+    async function getList(table, order = 'id.asc') {
+        try {
+            const [col, dir] = order.split('.');
+            const { data, error } = await sb.from(table).select('*').order(col, { ascending: dir === 'asc' });
+            if (error) {
+                console.warn('[DataSync] getList error:', error);
+                return [];
+            }
+            return data || [];
+        } catch (e) {
+            console.warn('[DataSync] getList failed:', e);
+            return [];
+        }
+    }
+    
+    // 添加记录
+    async function add(table, values) {
+        try {
+            const { data, error } = await sb.from(table).insert(values).select();
+            if (error) {
+                console.warn('[DataSync] add error:', error);
+                return null;
+            }
+            return data?.[0] || values;
+        } catch (e) {
+            console.warn('[DataSync] add failed:', e);
+            return null;
+        }
+    }
+    
+    // 更新记录
+    async function update(table, id, values) {
+        try {
+            const { error } = await sb.from(table).update(values).eq('id', id);
+            return !error;
+        } catch (e) {
+            console.warn('[DataSync] update failed:', e);
+            return false;
+        }
+    }
+    
+    // 删除记录
+    async function remove(table, id) {
+        try {
+            const { error } = await sb.from(table).delete().eq('id', id);
+            return !error;
+        } catch (e) {
+            console.warn('[DataSync] remove failed:', e);
+            return false;
+        }
+    }
+    
+    // 实时订阅
+    function subscribe(table, callback) {
+        return sb.channel('table-' + table)
+            .on('postgres_changes', { event: '*', schema: 'public', table: table }, callback)
+            .subscribe();
+    }
+    
+    return { sb, getSingle, updateSingle, getList, add, update, remove, subscribe };
 })();
 
 /* ========== 角色选择系统 ========== */
