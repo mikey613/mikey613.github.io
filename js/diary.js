@@ -27,11 +27,17 @@
 
         const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
         
+        // 检查是否是当前月
+        const isCurrentMonthView = isCurrentMonth;
+        
         let html = `
             <div class="diary-nav">
                 <button class="diary-nav-btn" id="diaryPrevMonth"><i class="fas fa-chevron-left"></i></button>
                 <span class="diary-month-title">${currentYear}年 ${monthNames[currentMonth]}</span>
-                <button class="diary-nav-btn" id="diaryNextMonth"><i class="fas fa-chevron-right"></i></button>
+                <div class="diary-nav-right">
+                    ${!isCurrentMonthView ? '<button class="diary-nav-btn diary-today-btn" id="diaryTodayBtn"><i class="fas fa-calendar-day"></i> 今天</button>' : ''}
+                    <button class="diary-nav-btn" id="diaryNextMonth"><i class="fas fa-chevron-right"></i></button>
+                </div>
             </div>
         `;
 
@@ -83,6 +89,17 @@
             if (currentMonth > 11) { currentMonth = 0; currentYear++; }
             renderCalendar();
         });
+        
+        // 绑定“今天”按钮
+        const todayBtn = document.getElementById('diaryTodayBtn');
+        if (todayBtn) {
+            todayBtn.addEventListener('click', () => {
+                const now = new Date();
+                currentYear = now.getFullYear();
+                currentMonth = now.getMonth();
+                renderCalendar();
+            });
+        }
 
         // 绑定日期点击
         calendar.querySelectorAll('.diary-day[data-date]').forEach(el => {

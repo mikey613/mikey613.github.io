@@ -2495,6 +2495,19 @@ body.day-mode .counter-num {
     transform: scale(1.1);
 }
 
+.diary-nav-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.diary-today-btn {
+    width: auto !important;
+    padding: 0 12px !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap;
+}
+
 .diary-month-title {
     font-weight: 600;
     font-size: 1rem;
