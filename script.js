@@ -486,10 +486,15 @@ window.addEventListener('load', () => {
     // 显示加载状态
     board.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-secondary);">选择照片开始拼图 🧩</div>';
 
-    function buildPuzzle(imgNum) {
+    function buildPuzzle(imgNum, shuffle = false) {
         board.innerHTML = '';
         completeEl.classList.remove('show');
         pieces = [0,1,2,3,4,5,6,7,8];
+        
+        // 如果需要打乱
+        if (shuffle) {
+            shufflePieces();
+        }
 
         // 预加载图片
         const img = new Image();
@@ -620,13 +625,11 @@ window.addEventListener('load', () => {
     }
 
     selectEl.addEventListener('change', () => {
-        shufflePieces();
-        buildPuzzle(parseInt(selectEl.value));
+        buildPuzzle(parseInt(selectEl.value), true);
     });
 
     shuffleBtn.addEventListener('click', () => {
-        shufflePieces();
-        buildPuzzle(parseInt(selectEl.value));
+        buildPuzzle(parseInt(selectEl.value), true);
     });
 
     // 初始化 - 显示提示文字，等待用户选择照片
