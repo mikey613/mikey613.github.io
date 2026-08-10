@@ -8,12 +8,21 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 /* ========== Supabase 数据同步模块 ========== */
 const DataSync = (function() {
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let sb = null;
+    
+    function getClient() {
+        if (!sb && typeof supabase !== 'undefined') {
+            sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        }
+        return sb;
+    }
     
     // 获取单条记录（用于单例数据如 pet, intimacy）
     async function getSingle(table) {
+        const client = getClient();
+        if (!client) return null;
         try {
-            const { data, error } = await sb.from(table).select('*').limit(1).maybeSingle();
+            const { data, error } = await client.from(table).select('*').limit(1).maybeSingle();
             if (error) {
                 console.warn('[DataSync] getSingle error:', error);
                 return null;
@@ -27,14 +36,16 @@ const DataSync = (function() {
     
     // 更新单条记录
     async function updateSingle(table, values) {
+        const client = getClient();
+        if (!client) return false;
         try {
             // 先检查是否存在
-            const { data: existing } = await sb.from(table).select('id').limit(1).maybeSingle();
+            const { data: existing } = await client.from(table).select('id').limit(1).maybeSingle();
             if (existing) {
-                const { error } = await sb.from(table).update(values).eq('id', existing.id);
+                const { error } = await client.from(table).update(values).eq('id', existing.id);
                 return !error;
             } else {
-                const { error } = await sb.from(table).insert(values);
+                const { error } = await client.from(table).insert(values);
                 return !error;
             }
         } catch (e) {
@@ -45,9 +56,11 @@ const DataSync = (function() {
     
     // 获取列表
     async function getList(table, order = 'id.asc') {
+        const client = getClient();
+        if (!client) return [];
         try {
             const [col, dir] = order.split('.');
-            const { data, error } = await sb.from(table).select('*').order(col, { ascending: dir === 'asc' });
+            const { data, error } = await client.from(table).select('*').order(col, { ascending: dir === 'asc' });
             if (error) {
                 console.warn('[DataSync] getList error:', error);
                 return [];
@@ -61,8 +74,10 @@ const DataSync = (function() {
     
     // 添加记录
     async function add(table, values) {
+        const client = getClient();
+        if (!client) return null;
         try {
-            const { data, error } = await sb.from(table).insert(values).select();
+            const { data, error } = await client.from(table).insert(values).select();
             if (error) {
                 console.warn('[DataSync] add error:', error);
                 return null;
@@ -76,8 +91,10 @@ const DataSync = (function() {
     
     // 更新记录
     async function update(table, id, values) {
+        const client = getClient();
+        if (!client) return false;
         try {
-            const { error } = await sb.from(table).update(values).eq('id', id);
+            const { error } = await client.from(table).update(values).eq('id', id);
             return !error;
         } catch (e) {
             console.warn('[DataSync] update failed:', e);
@@ -87,8 +104,10 @@ const DataSync = (function() {
     
     // 删除记录
     async function remove(table, id) {
+        const client = getClient();
+        if (!client) return false;
         try {
-            const { error } = await sb.from(table).delete().eq('id', id);
+            const { error } = await client.from(table).delete().eq('id', id);
             return !error;
         } catch (e) {
             console.warn('[DataSync] remove failed:', e);
@@ -98,12 +117,14 @@ const DataSync = (function() {
     
     // 实时订阅
     function subscribe(table, callback) {
-        return sb.channel('table-' + table)
+        const client = getClient();
+        if (!client) return null;
+        return client.channel('table-' + table)
             .on('postgres_changes', { event: '*', schema: 'public', table: table }, callback)
             .subscribe();
     }
     
-    return { sb, getSingle, updateSingle, getList, add, update, remove, subscribe };
+    return { getClient, getSingle, updateSingle, getList, add, update, remove, subscribe };
 })();
 
 /* ========== 角色选择系统 ========== */
