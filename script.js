@@ -483,14 +483,31 @@ window.addEventListener('load', () => {
     let pieces = [];
     let draggedIdx = null;
 
+    // 显示加载状态
+    board.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-secondary);">选择照片开始拼图 🧩</div>';
+
     function buildPuzzle(imgNum) {
         board.innerHTML = '';
         completeEl.classList.remove('show');
         pieces = [0,1,2,3,4,5,6,7,8];
 
+        // 预加载图片
+        const img = new Image();
+        img.src = imgNum + '.jpg';
+        img.onload = function() {
+            renderPuzzlePieces(imgNum);
+        };
+        img.onerror = function() {
+            board.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-secondary);">图片加载失败，请检查图片文件 ' + imgNum + '.jpg</div>';
+        };
+    }
+
+    function renderPuzzlePieces(imgNum) {
+        board.innerHTML = '';
         pieces.forEach((p, i) => {
             const div = document.createElement('div');
             div.className = 'puzzle-piece';
+            if (p === i) div.classList.add('correct');
             div.dataset.index = i;
             const row = Math.floor(p / 3);
             const col = p % 3;
@@ -604,17 +621,15 @@ window.addEventListener('load', () => {
 
     selectEl.addEventListener('change', () => {
         shufflePieces();
-        rebuildBoard(parseInt(selectEl.value));
+        buildPuzzle(parseInt(selectEl.value));
     });
 
     shuffleBtn.addEventListener('click', () => {
         shufflePieces();
-        rebuildBoard(parseInt(selectEl.value));
+        buildPuzzle(parseInt(selectEl.value));
     });
 
-    // 初始化
-    shufflePieces();
-    rebuildBoard(1);
+    // 初始化 - 显示提示文字，等待用户选择照片
 })();
 
 /* ========== 纪念日彩蛋 ========== */

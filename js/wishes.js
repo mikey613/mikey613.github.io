@@ -4,6 +4,9 @@
     const addBtn = document.getElementById('addWish');
     const wall = document.getElementById('wishesWall');
 
+    // 显示加载状态
+    wall.innerHTML = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--text-secondary);">正在加载心愿...</div>';
+
     async function loadWishes() {
         const wishes = await DataSync.getList('wishes');
         renderAll(wishes);
@@ -11,6 +14,10 @@
 
     function renderAll(wishes) {
         wall.innerHTML = '';
+        if (wishes.length === 0) {
+            wall.innerHTML = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--text-secondary);">还没有心愿，写下第一个吧 ✨</div>';
+            return;
+        }
         wishes.forEach(renderWish);
     }
 
